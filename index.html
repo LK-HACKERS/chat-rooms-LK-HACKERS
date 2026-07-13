@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>LK-HACKERS HACKING CHAT ROOM</title>
+    <title>LK-HACKERS HACKING CHAT ROOM v7.0</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
-    <!-- Jitsi Meet SDK (Free Group Calls - Unlimited Participants) -->
+    <!-- Jitsi Meet SDK (Group Video Calls - Unlimited & Free) -->
     <script src="https://meet.jit.si/external_api.js"></script>
 
     <style>
@@ -18,7 +18,8 @@
             --bg-primary: #0a0a0a; --bg-secondary: #111111; --bg-card: #1a1a1a;
             --bg-input: #222222; --border-color: #333333;
             --accent-red: #ff0000; --accent-blue: #00d4ff; --accent-green: #00ff88;
-            --accent-yellow: #ffd700; --text-primary: #ffffff; --text-secondary: #888888;
+            --accent-yellow: #ffd700; --accent-orange: #ff6b35;
+            --text-primary: #ffffff; --text-secondary: #888888;
             --text-muted: #555555; --shadow-red: rgba(255, 0, 0, 0.25);
             --radius: 16px; --transition: 0.3s ease;
             --font: 'Segoe UI', 'Noto Sans Sinhala', system-ui, sans-serif;
@@ -48,23 +49,48 @@
         .login-box .hint span { color: var(--accent-green); }
 
         /* Admin Panel Overlay */
-        .admin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px; }
+        .admin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.94); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: 15px; }
         .admin-overlay.active { display: flex; }
-        .admin-box { background: var(--bg-card); border: 2px solid var(--accent-yellow); border-radius: var(--radius); padding: 30px; max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 60px rgba(255,215,0,0.2); }
-        .admin-box h3 { color: var(--accent-yellow); font-size: 1.3rem; margin-bottom: 15px; text-align: center; }
-        .admin-box .stat-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.85rem; }
-        .admin-box .stat-item .label { color: var(--text-secondary); }
-        .admin-box .stat-item .value { color: var(--accent-green); }
-        .admin-box .admin-action { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .admin-box .admin-action input { flex: 1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font); }
-        .admin-box .admin-action button { padding: 10px 20px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: var(--transition); }
-        .admin-box .admin-action button:hover { transform: scale(1.05); }
-        .admin-box .admin-list { margin-top: 15px; max-height: 150px; overflow-y: auto; }
-        .admin-box .admin-list .admin-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.8rem; }
-        .admin-box .admin-list .admin-item .remove-btn { color: var(--accent-red); cursor: pointer; background: none; border: none; font-weight: bold; }
-
-        /* Private Admin Group Lock */
-        .private-lock { color: var(--accent-yellow); font-size: 0.6rem; margin-left: 4px; }
+        .admin-box { background: var(--bg-card); border: 2px solid var(--accent-yellow); border-radius: var(--radius); padding: 25px 20px; max-width: 800px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 80px rgba(255,215,0,0.15); }
+        .admin-box h3 { color: var(--accent-yellow); font-size: 1.3rem; margin-bottom: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .admin-box .admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .admin-box .admin-tabs button { padding: 6px 14px; background: transparent; border: 1px solid var(--border-color); border-radius: 20px; color: var(--text-secondary); font-size: 0.7rem; font-family: var(--mono); cursor: pointer; transition: var(--transition); }
+        .admin-box .admin-tabs button.active { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(255,215,0,0.05); }
+        .admin-box .admin-tabs button:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .admin-box .admin-section { display: none; }
+        .admin-box .admin-section.active { display: block; }
+        .admin-box .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .admin-box .stat-item { background: var(--bg-secondary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
+        .admin-box .stat-item .label { color: var(--text-secondary); font-size: 0.6rem; font-family: var(--mono); }
+        .admin-box .stat-item .value { color: var(--accent-green); font-size: 1.1rem; font-weight: bold; font-family: var(--mono); }
+        .admin-box .stat-item .value.red { color: var(--accent-red); }
+        .admin-box .stat-item .value.yellow { color: var(--accent-yellow); }
+        .admin-box .user-list, .admin-box .group-list { max-height: 200px; overflow-y: auto; margin-top: 8px; }
+        .admin-box .user-list .user-entry, .admin-box .group-list .group-entry { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.75rem; }
+        .admin-box .user-list .user-entry .actions button, .admin-box .group-list .group-entry .actions button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.7rem; margin-left: 4px; transition: var(--transition); padding: 2px 6px; border-radius: 4px; }
+        .admin-box .user-list .user-entry .actions button:hover { background: var(--bg-card); color: var(--accent-red); }
+        .admin-box .user-list .user-entry .actions button.ban-btn { color: var(--accent-orange); }
+        .admin-box .user-list .user-entry .actions button.ban-btn:hover { background: rgba(255,107,53,0.2); }
+        .admin-box .user-list .user-entry .actions button.admin-btn { color: var(--accent-yellow); }
+        .admin-box .user-list .user-entry .actions button.admin-btn:hover { background: rgba(255,215,0,0.2); }
+        .admin-box .user-list .user-entry .status-badge { font-size: 0.5rem; padding: 2px 8px; border-radius: 10px; }
+        .admin-box .user-list .user-entry .status-badge.online { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .admin-box .user-list .user-entry .status-badge.offline { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+        .admin-box .user-list .user-entry .status-badge.banned { background: rgba(255,0,0,0.2); color: var(--accent-red); }
+        .admin-box .admin-action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+        .admin-box .admin-action-row input, .admin-box .admin-action-row select { padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font); font-size: 0.8rem; flex: 1; min-width: 120px; }
+        .admin-box .admin-action-row button { padding: 8px 16px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: var(--transition); font-family: var(--mono); font-size: 0.75rem; }
+        .admin-box .admin-action-row button:hover { transform: scale(1.04); }
+        .admin-box .admin-action-row button.danger { background: var(--accent-red); color: #fff; }
+        .admin-box .admin-action-row button.danger:hover { background: #ff4444; }
+        .admin-box .admin-log { max-height: 150px; overflow-y: auto; font-family: var(--mono); font-size: 0.65rem; color: var(--text-secondary); background: var(--bg-secondary); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 8px; }
+        .admin-box .admin-log .log-entry { padding: 3px 0; border-bottom: 1px solid var(--border-color); }
+        .admin-box .admin-log .log-entry .time { color: var(--text-muted); }
+        .admin-box .admin-log .log-entry .user { color: var(--accent-blue); }
+        .admin-box .admin-log .log-entry .action { color: var(--accent-yellow); }
+        .admin-box .close-admin-btn { margin-top: 15px; text-align: center; }
+        .admin-box .close-admin-btn button { padding: 8px 30px; background: var(--accent-red); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono); font-size: 0.8rem; transition: var(--transition); }
+        .admin-box .close-admin-btn button:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); }
 
         /* Header */
         .header { background: var(--bg-primary); padding: 10px 20px; border-bottom: 2px solid var(--accent-red); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
@@ -85,10 +111,7 @@
         .header-actions .logout-btn:hover { background: var(--accent-red); color: #000; }
         @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
 
-        /* Body Layout */
         .body-layout { display: flex; flex: 1; overflow: hidden; }
-
-        /* Sidebar */
         .sidebar { width: 260px; background: var(--bg-primary); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; transition: var(--transition); }
         .sidebar .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .sidebar .sidebar-tabs button { flex: 1; padding: 10px 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.7rem; font-family: var(--mono); cursor: pointer; transition: var(--transition); border-bottom: 2px solid transparent; }
@@ -98,19 +121,21 @@
         .user-item:hover, .group-item:hover { background: var(--bg-card); }
         .user-item.online { border-left-color: var(--accent-green); }
         .user-item.offline { border-left-color: var(--text-muted); opacity: 0.6; }
+        .user-item.banned-user { border-left-color: var(--accent-orange); opacity: 0.5; text-decoration: line-through; }
         .group-item.active { border-left-color: var(--accent-red); background: var(--bg-card); }
         .user-item .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: var(--text-secondary); flex-shrink: 0; border: 1px solid var(--border-color); }
         .user-item .avatar.online-avatar { border-color: var(--accent-green); }
+        .user-item .avatar.banned-avatar { border-color: var(--accent-orange); }
         .user-item .user-info { flex: 1; min-width: 0; }
         .user-item .user-info .uname { font-size: 0.8rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-item .user-info .ustatus { font-size: 0.55rem; color: var(--text-muted); }
         .user-item .user-info .ustatus.online-status { color: var(--accent-green); }
+        .user-item .user-info .ustatus.banned-status { color: var(--accent-orange); }
         .group-item .gname { font-size: 0.8rem; font-weight: 500; }
         .group-item .gcount { font-size: 0.55rem; color: var(--text-muted); }
         .group-item .gicon { font-size: 0.9rem; }
         .admin-lock { color: var(--accent-yellow); font-size: 0.6rem; margin-left: 4px; }
 
-        /* Main Chat */
         .main-chat { flex: 1; display: flex; flex-direction: column; background: var(--bg-secondary); min-width: 0; }
         .chat-header { padding: 10px 20px; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
         .chat-header .chat-title h2 { font-size: 0.95rem; font-weight: 600; }
@@ -122,6 +147,7 @@
         .chat-header .chat-actions .video-btn { color: var(--accent-blue); }
         .chat-header .chat-actions .group-call-btn { color: var(--accent-yellow); }
 
+        /* 📋 UNLIMITED PERSISTENT CHAT - Messages Area */
         .messages-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-secondary); }
         .msg-group { display: flex; flex-direction: column; gap: 2px; max-width: 82%; }
         .msg-group.sent { align-self: flex-end; }
@@ -153,19 +179,17 @@
         .input-area .send-btn { padding: 10px 24px; background: var(--accent-red); border: none; border-radius: 30px; color: #000; font-weight: bold; cursor: pointer; transition: var(--transition); font-size: 0.85rem; font-family: var(--font); flex-shrink: 0; }
         .input-area .send-btn:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); transform: scale(1.02); }
 
-        /* Call Container (Jitsi) */
+        /* 📞 JITSI CALL CONTAINER - Group Video Calls */
         #callContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1500; display: none; background: #000; }
         #callContainer.active { display: block; }
         #callContainer .close-call { position: absolute; top: 15px; right: 20px; z-index: 1600; background: var(--accent-red); color: #000; border: none; padding: 8px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; font-family: var(--mono); font-size: 0.8rem; transition: var(--transition); }
         #callContainer .close-call:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); }
 
-        /* Emoji Picker */
         .emoji-picker { display: none; position: absolute; bottom: 70px; left: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; max-width: 280px; max-height: 200px; overflow-y: auto; z-index: 100; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .emoji-picker.active { display: grid; }
         .emoji-picker span { font-size: 1.3rem; cursor: pointer; padding: 4px; text-align: center; border-radius: 6px; transition: var(--transition); }
         .emoji-picker span:hover { background: var(--bg-input); transform: scale(1.2); }
 
-        /* Modal */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
         .modal-overlay.active { display: flex; }
         .modal-box { background: var(--bg-card); border-radius: var(--radius); padding: 30px; max-width: 420px; width: 90%; border: 1px solid var(--border-color); box-shadow: 0 0 60px var(--shadow-red); animation: fadeUp 0.3s ease; }
@@ -192,6 +216,8 @@
             .header-stats { font-size: 0.55rem; gap: 10px; }
             .app-container { border-radius: 0; height: 100vh; max-height: none; width: 100vw; }
             .msg-group { max-width: 92%; }
+            .admin-box { padding: 15px 10px; }
+            .admin-box .stat-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
         }
     </style>
 </head>
@@ -208,43 +234,100 @@
         <div class="login-box">
             <img src="https://raw.githubusercontent.com/LK-HACKERS/Photo/main/1783352823042.png" alt="LK-HACKERS">
             <h2>🔐 LK-HACKERS</h2>
-            <p>HACKING CHAT ROOM v5.0</p>
+            <p>HACKING CHAT ROOM v7.0</p>
             <input type="text" id="loginUsername" placeholder="Enter your hacker alias..." autocomplete="off">
             <button onclick="login()">⚡ Join the Hacking Chat</button>
-            <div class="hint">🆓 Free & Unlimited • 🔒 Encrypted<br>🌐 Sinhala | English | Singlish<br>💀 100% Anonymous</div>
+            <div class="hint">🆓 Free & Unlimited • 🔒 Encrypted<br>🌐 Sinhala | English | Singlish<br>💀 100% Anonymous<br>📋 Chats Never Delete!</div>
         </div>
     </div>
 
     <!-- Admin Panel Overlay -->
     <div class="admin-overlay" id="adminOverlay">
         <div class="admin-box">
-            <h3>🛡️ ADMIN PANEL</h3>
+            <h3>🛡️ ADMIN PANEL <span style="font-size:0.7rem;color:var(--text-muted);">v2.0</span></h3>
             <div id="adminLogin">
-                <p style="color: var(--text-secondary); font-family: var(--mono); font-size: 0.85rem; margin-bottom: 15px;">Enter Admin Password to access panel</p>
+                <p style="color: var(--text-secondary); font-family: var(--mono); font-size: 0.85rem; margin-bottom: 15px; text-align:center;">Enter Admin Password to access panel</p>
                 <input type="password" id="adminPasswordInput" placeholder="Admin Password..." style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--mono); margin-bottom: 12px;">
                 <button onclick="verifyAdminLogin()" style="width: 100%; padding: 12px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono);">🔓 Unlock Admin Panel</button>
             </div>
             <div id="adminContent" style="display: none;">
-                <div class="stat-item"><span class="label">Total Users</span><span class="value" id="adminTotalUsers">0</span></div>
-                <div class="stat-item"><span class="label">Online Now</span><span class="value" id="adminOnlineUsers">0</span></div>
-                <div class="stat-item"><span class="label">Total Groups</span><span class="value" id="adminTotalGroups">0</span></div>
-                <div class="stat-item"><span class="label">Admin Users</span><span class="value" id="adminAdminCount">0</span></div>
-                <div class="admin-action">
-                    <input type="text" id="adminAddUser" placeholder="Username to make admin...">
-                    <button onclick="makeAdmin()">➕ Make Admin</button>
+                <div class="admin-tabs">
+                    <button class="active" data-atab="dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</button>
+                    <button data-atab="users" onclick="switchAdminTab('users')">👥 Users</button>
+                    <button data-atab="groups" onclick="switchAdminTab('groups')">📁 Groups</button>
+                    <button data-atab="logs" onclick="switchAdminTab('logs')">📜 Logs</button>
+                    <button data-atab="settings" onclick="switchAdminTab('settings')">⚙️ Settings</button>
                 </div>
-                <div class="admin-list" id="adminList">
-                    <h4 style="color: var(--text-secondary); font-size: 0.8rem; margin: 10px 0;">👑 Admin Users</h4>
-                    <div id="adminUsersList"></div>
+
+                <div class="admin-section active" id="adminSectionDashboard">
+                    <div class="stat-grid">
+                        <div class="stat-item"><div class="label">Total Users</div><div class="value" id="adminTotalUsers">0</div></div>
+                        <div class="stat-item"><div class="label">Online Now</div><div class="value" id="adminOnlineUsers">0</div></div>
+                        <div class="stat-item"><div class="label">Total Groups</div><div class="value" id="adminTotalGroups">0</div></div>
+                        <div class="stat-item"><div class="label">Admins</div><div class="value yellow" id="adminAdminCount">0</div></div>
+                        <div class="stat-item"><div class="label">Banned</div><div class="value red" id="adminBannedCount">0</div></div>
+                        <div class="stat-item"><div class="label">Messages Today</div><div class="value" id="adminMessagesToday">0</div></div>
+                    </div>
+                    <div class="admin-action-row">
+                        <button onclick="broadcastMessage()">📢 Broadcast Message</button>
+                        <button class="danger" onclick="emergencyShutdown()">⛔ Emergency Shutdown</button>
+                    </div>
                 </div>
-                <div style="margin-top: 15px; text-align: center;">
-                    <button onclick="closeAdminPanel()" style="padding: 8px 20px; background: var(--accent-red); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono);">✕ Close Panel</button>
+
+                <div class="admin-section" id="adminSectionUsers">
+                    <div class="admin-action-row">
+                        <input type="text" id="adminSearchUser" placeholder="Search user..." oninput="filterUserList()">
+                        <select id="adminUserFilter" onchange="filterUserList()">
+                            <option value="all">All Users</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="banned">Banned</option>
+                            <option value="admin">Admins</option>
+                        </select>
+                    </div>
+                    <div class="user-list" id="adminUserList"></div>
+                </div>
+
+                <div class="admin-section" id="adminSectionGroups">
+                    <div class="admin-action-row">
+                        <input type="text" id="adminSearchGroup" placeholder="Search group..." oninput="filterGroupList()">
+                    </div>
+                    <div class="group-list" id="adminGroupList"></div>
+                </div>
+
+                <div class="admin-section" id="adminSectionLogs">
+                    <div class="admin-log" id="adminLogContainer">
+                        <div class="log-entry"><span class="time">[System]</span> Admin logs will appear here</div>
+                    </div>
+                    <div class="admin-action-row" style="margin-top:8px;">
+                        <button onclick="clearAdminLogs()">🗑️ Clear Logs</button>
+                    </div>
+                </div>
+
+                <div class="admin-section" id="adminSectionSettings">
+                    <div class="admin-action-row">
+                        <label style="color:var(--text-secondary);font-size:0.7rem;font-family:var(--mono);">Maintenance Mode</label>
+                        <button id="maintenanceToggleBtn" onclick="toggleMaintenance()">🔴 Disabled</button>
+                    </div>
+                    <div class="admin-action-row">
+                        <label style="color:var(--text-secondary);font-size:0.7rem;font-family:var(--mono);">Enable New Registrations</label>
+                        <button id="registrationsToggleBtn" onclick="toggleRegistrations()">✅ Enabled</button>
+                    </div>
+                    <div class="admin-action-row">
+                        <label style="color:var(--text-secondary);font-size:0.7rem;font-family:var(--mono);">Max Messages Per User</label>
+                        <input type="number" id="maxMessagesSetting" value="100" style="width:100px;padding:6px;">
+                        <button onclick="saveMaxMessages()">Save</button>
+                    </div>
+                </div>
+
+                <div class="close-admin-btn">
+                    <button onclick="closeAdminPanel()">✕ Close Admin Panel</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Jitsi Call Container -->
+    <!-- 📞 Jitsi Call Container - Group Video Calls -->
     <div id="callContainer">
         <button class="close-call" onclick="endGroupCall()">✕ End Call</button>
     </div>
@@ -308,8 +391,9 @@
                 </div>
             </div>
 
+            <!-- 📋 UNLIMITED PERSISTENT CHAT - Messages never delete on login/logout -->
             <div class="messages-area" id="messagesArea">
-                <div class="msg-system">🔥 Welcome to LK-HACKERS HACKING CHAT ROOM!<br>🆓 Free • Unlimited • Encrypted • Anonymous<br>🌐 Chat in Sinhala, English, Singlish</div>
+                <div class="msg-system">🔥 Welcome to LK-HACKERS HACKING CHAT ROOM v7.0!<br>🆓 Free • Unlimited • Encrypted • Anonymous<br>🌐 Chat in Sinhala, English, Singlish<br>🖥️ Screen Share Enabled!<br>📋 Chats Never Delete on Login/Logout!</div>
             </div>
 
             <div class="typing-indicator hidden" id="typingIndicator">
@@ -346,7 +430,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 🚀 JAVASCRIPT ENGINE -->
+<!-- 🚀 JAVASCRIPT ENGINE - v7.0 -->
 <!-- ============================================================ -->
 <script>
     // ============================================================
@@ -400,8 +484,8 @@
     // ============================================================
     // 🔐 ADMIN PASSWORDS
     // ============================================================
-    const ADMIN_PASSWORD = "LK-HACKERS-ADMIN-2026";  // Admin Panel Password
-    const PRIVATE_ADMIN_GROUP_PASSWORD = "PRIVATE-ADMIN-2026";  // Private Admin Group Password
+    const ADMIN_PASSWORD = "LK-HACKERS-ADMIN-2026";
+    const PRIVATE_ADMIN_GROUP_PASSWORD = "PRIVATE-ADMIN-2026";
 
     // ============================================================
     // 🧠 GLOBAL STATE
@@ -416,7 +500,12 @@
         isSidebarOpen: window.innerWidth > 768,
         isEmojiOpen: false,
         typingTimeout: null,
-        adminUsers: []
+        adminUsers: [],
+        bannedUsers: [],
+        maintenanceMode: false,
+        registrationsEnabled: true,
+        adminLogs: [],
+        messageCountToday: 0
     };
 
     // ============================================================
@@ -430,35 +519,43 @@
             return;
         }
         const clean = username.slice(0, 20);
-        state.currentUser = clean;
-        state.isLoggedIn = true;
+        
+        db.ref('banned/' + clean).once('value', snap => {
+            if (snap.val() === true) {
+                alert('❌ You are banned from this chat!');
+                return;
+            }
+            state.currentUser = clean;
+            state.isLoggedIn = true;
 
-        const userRef = db.ref('users/' + clean);
-        userRef.set({
-            username: clean,
-            online: true,
-            lastSeen: Date.now(),
-            role: 'member',
-            joined: Date.now()
+            const userRef = db.ref('users/' + clean);
+            userRef.set({
+                username: clean,
+                online: true,
+                lastSeen: Date.now(),
+                role: 'member',
+                joined: Date.now()
+            });
+            db.ref('users/' + clean + '/online').onDisconnect().set(false);
+            db.ref('users/' + clean + '/lastSeen').onDisconnect().set(Date.now());
+
+            document.getElementById('loginOverlay').classList.add('hidden');
+
+            loadUsers();
+            loadGroups();
+            loadMessages('general');
+            listenForMessages('general');
+            listenTyping();
+            updateRoomInfo('general');
+            addSystemMessage('🦁 ' + clean + ' joined the hacking chat! 🔥');
+
+            checkAdminStatus(clean);
+            loadAdminLogs();
+            loadBannedUsers();
+
+            document.getElementById('msgInput').focus();
+            console.log('✅ Logged in as:', clean);
         });
-        db.ref('users/' + clean + '/online').onDisconnect().set(false);
-        db.ref('users/' + clean + '/lastSeen').onDisconnect().set(Date.now());
-
-        document.getElementById('loginOverlay').classList.add('hidden');
-
-        loadUsers();
-        loadGroups();
-        loadMessages('general');
-        listenForMessages('general');
-        listenTyping();
-        updateRoomInfo('general');
-        addSystemMessage('🦁 ' + clean + ' joined the hacking chat! 🔥');
-
-        // Check if user is admin
-        checkAdminStatus(clean);
-
-        document.getElementById('msgInput').focus();
-        console.log('✅ Logged in as:', clean);
     }
 
     document.getElementById('loginUsername').addEventListener('keypress', function(e) {
@@ -472,6 +569,7 @@
         db.ref('users/' + state.currentUser + '/lastSeen').set(Date.now());
         state.isLoggedIn = false;
         state.isAdmin = false;
+        // 🔄 Page reload කරන්න (Chat logs විනාශ වෙන්නේ නැහැ - Firebase එකේ save වෙලා තියෙනවා)
         location.reload();
     }
 
@@ -483,6 +581,7 @@
             if (snap.val() === true) {
                 state.isAdmin = true;
                 addSystemMessage('👑 Admin access granted to ' + username + '!');
+                addAdminLog(username + ' logged in as admin');
             }
         });
     }
@@ -494,6 +593,7 @@
         document.getElementById('adminPasswordInput').value = '';
         document.getElementById('adminPasswordInput').focus();
         loadAdminData();
+        loadAdminLogs();
     }
 
     function closeAdminPanel() {
@@ -506,6 +606,9 @@
             document.getElementById('adminLogin').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
             loadAdminData();
+            loadAdminLogs();
+            loadBannedUsers();
+            addAdminLog(state.currentUser + ' unlocked admin panel');
             addSystemMessage('👑 Admin panel unlocked by ' + state.currentUser);
         } else {
             alert('❌ Invalid Admin Password!');
@@ -513,8 +616,18 @@
         }
     }
 
+    function switchAdminTab(tab) {
+        document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.admin-tabs button[data-atab="${tab}"]`).classList.add('active');
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('adminSection' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+        if (tab === 'users') renderAdminUsers();
+        if (tab === 'groups') renderAdminGroups();
+        if (tab === 'dashboard') loadAdminData();
+        if (tab === 'logs') loadAdminLogs();
+    }
+
     function loadAdminData() {
-        // Load users
         db.ref('users').once('value', snap => {
             const data = snap.val() || {};
             let total = 0, online = 0;
@@ -526,63 +639,306 @@
             document.getElementById('adminOnlineUsers').textContent = online;
         });
 
-        // Load groups
         db.ref('groups').once('value', snap => {
             const data = snap.val() || {};
             document.getElementById('adminTotalGroups').textContent = Object.keys(data).length;
         });
 
-        // Load admins
         db.ref('admins').once('value', snap => {
             const data = snap.val() || {};
             const admins = Object.keys(data).filter(k => data[k] === true);
             state.adminUsers = admins;
             document.getElementById('adminAdminCount').textContent = admins.length;
-            renderAdminList(admins);
         });
-    }
 
-    function renderAdminList(admins) {
-        const container = document.getElementById('adminUsersList');
-        if (!admins.length) {
-            container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8rem;">No admin users</p>';
-            return;
-        }
-        let html = '';
-        admins.forEach(admin => {
-            const isSelf = admin === state.currentUser;
-            html += `
-                <div class="admin-item">
-                    <span>${admin} ${isSelf ? '(You)' : ''}</span>
-                    ${!isSelf ? `<button class="remove-btn" onclick="removeAdmin('${admin}')">✕ Remove</button>` : '<span style="color: var(--accent-yellow);">👑</span>'}
-                </div>
-            `;
+        db.ref('banned').once('value', snap => {
+            const data = snap.val() || {};
+            const banned = Object.keys(data).filter(k => data[k] === true);
+            document.getElementById('adminBannedCount').textContent = banned.length;
+            state.bannedUsers = banned;
         });
-        container.innerHTML = html;
-    }
 
-    function makeAdmin() {
-        const username = document.getElementById('adminAddUser').value.trim();
-        if (!username) { alert('⚠️ Enter username!'); return; }
-        if (username === state.currentUser) { alert('⚠️ You are already admin!'); return; }
-
-        db.ref('users/' + username).once('value', snap => {
-            if (!snap.exists()) {
-                alert('❌ User not found!');
-                return;
+        const today = new Date().toISOString().split('T')[0];
+        db.ref('messages/general').orderByChild('timestamp').once('value', snap => {
+            const data = snap.val() || {};
+            let count = 0;
+            for (let key in data) {
+                if (data[key].timestamp) {
+                    const msgDate = new Date(data[key].timestamp).toISOString().split('T')[0];
+                    if (msgDate === today) count++;
+                }
             }
-            db.ref('admins/' + username).set(true);
-            document.getElementById('adminAddUser').value = '';
-            loadAdminData();
-            addSystemMessage('👑 ' + username + ' is now an admin!');
+            document.getElementById('adminMessagesToday').textContent = count;
         });
     }
 
-    function removeAdmin(username) {
-        if (!confirm('⚠️ Remove ' + username + ' from admins?')) return;
-        db.ref('admins/' + username).remove();
+    function loadBannedUsers() {
+        db.ref('banned').on('value', snap => {
+            const data = snap.val() || {};
+            state.bannedUsers = Object.keys(data).filter(k => data[k] === true);
+            if (document.getElementById('adminBannedCount')) {
+                document.getElementById('adminBannedCount').textContent = state.bannedUsers.length;
+            }
+            renderUsers();
+        });
+    }
+
+    function renderAdminUsers() {
+        const container = document.getElementById('adminUserList');
+        db.ref('users').once('value', snap => {
+            const data = snap.val() || {};
+            const users = [];
+            for (let key in data) {
+                users.push({key, ...data[key]});
+            }
+            users.sort((a,b) => a.key.localeCompare(b.key));
+            
+            const filter = document.getElementById('adminUserFilter').value;
+            const search = document.getElementById('adminSearchUser').value.toLowerCase();
+            
+            let html = '';
+            users.forEach(u => {
+                const isBanned = state.bannedUsers.includes(u.key);
+                const isAdmin = state.adminUsers.includes(u.key);
+                const isOnline = u.online === true;
+                
+                if (filter === 'online' && !isOnline) return;
+                if (filter === 'offline' && isOnline) return;
+                if (filter === 'banned' && !isBanned) return;
+                if (filter === 'admin' && !isAdmin) return;
+                if (search && !u.key.toLowerCase().includes(search)) return;
+                
+                const statusClass = isBanned ? 'banned' : (isOnline ? 'online' : 'offline');
+                const statusText = isBanned ? '🚫 Banned' : (isOnline ? '🟢 Online' : '💤 Offline');
+                html += `
+                    <div class="user-entry">
+                        <span>${u.key} ${isAdmin ? '👑' : ''}</span>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <span class="actions">
+                            ${!isBanned ? `<button class="ban-btn" onclick="banUser('${u.key}')">🚫 Ban</button>` : `<button onclick="unbanUser('${u.key}')">✅ Unban</button>`}
+                            ${!isAdmin && !isBanned ? `<button class="admin-btn" onclick="makeAdminFromPanel('${u.key}')">👑 Make Admin</button>` : ''}
+                            ${isAdmin && u.key !== state.currentUser ? `<button onclick="removeAdminFromPanel('${u.key}')">⬇️ Remove Admin</button>` : ''}
+                            ${u.key !== state.currentUser && !isBanned ? `<button onclick="deleteUser('${u.key}')" style="color:var(--accent-red);">🗑️</button>` : ''}
+                        </span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html || '<div style="color:var(--text-muted);padding:10px;text-align:center;">No users found</div>';
+        });
+    }
+
+    function filterUserList() {
+        renderAdminUsers();
+    }
+
+    function renderAdminGroups() {
+        const container = document.getElementById('adminGroupList');
+        db.ref('groups').once('value', snap => {
+            const data = snap.val() || {};
+            const search = document.getElementById('adminSearchGroup').value.toLowerCase();
+            let html = '';
+            for (let key in data) {
+                const g = data[key];
+                const name = g.name || key;
+                if (search && !name.toLowerCase().includes(search)) continue;
+                const members = g.members ? Object.keys(g.members).length : 0;
+                const isPrivate = g.privateAdmin === true;
+                html += `
+                    <div class="group-entry">
+                        <span>${isPrivate ? '🔒' : '📁'} ${name} (${members} members)</span>
+                        <span class="actions">
+                            <button onclick="hijackGroup('${key}')" title="Take ownership">🎯 Hijack</button>
+                            <button onclick="deleteGroup('${key}')" style="color:var(--accent-red);">🗑️</button>
+                            <button onclick="toggleGroupPrivate('${key}')">${isPrivate ? '🔓 Make Public' : '🔒 Make Private'}</button>
+                        </span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html || '<div style="color:var(--text-muted);padding:10px;text-align:center;">No groups found</div>';
+        });
+    }
+
+    function filterGroupList() {
+        renderAdminGroups();
+    }
+
+    // ===== USER MANAGEMENT FUNCTIONS (BAN/UNBAN) =====
+    function banUser(username) {
+        if (!confirm(`⚠️ Ban ${username}?`)) return;
+        db.ref('banned/' + username).set(true);
+        db.ref('users/' + username + '/online').set(false);
+        addAdminLog('Banned user: ' + username);
+        addSystemMessage('🚫 ' + username + ' has been banned by admin');
+        renderAdminUsers();
         loadAdminData();
+    }
+
+    function unbanUser(username) {
+        if (!confirm(`✅ Unban ${username}?`)) return;
+        db.ref('banned/' + username).remove();
+        addAdminLog('Unbanned user: ' + username);
+        addSystemMessage('✅ ' + username + ' has been unbanned');
+        renderAdminUsers();
+        loadAdminData();
+    }
+
+    function deleteUser(username) {
+        if (!confirm(`⚠️ Delete user ${username}? This will remove all their data.`)) return;
+        db.ref('users/' + username).remove();
+        db.ref('admins/' + username).remove();
+        db.ref('banned/' + username).remove();
+        addAdminLog('Deleted user: ' + username);
+        addSystemMessage('🗑️ User ' + username + ' deleted by admin');
+        renderAdminUsers();
+        loadAdminData();
+    }
+
+    function makeAdminFromPanel(username) {
+        if (!confirm(`👑 Make ${username} admin?`)) return;
+        db.ref('admins/' + username).set(true);
+        addAdminLog('Made admin: ' + username);
+        addSystemMessage('👑 ' + username + ' is now an admin!');
+        renderAdminUsers();
+        loadAdminData();
+    }
+
+    function removeAdminFromPanel(username) {
+        if (!confirm(`⬇️ Remove admin privileges from ${username}?`)) return;
+        db.ref('admins/' + username).remove();
+        addAdminLog('Removed admin: ' + username);
         addSystemMessage('🛡️ ' + username + ' removed from admins');
+        renderAdminUsers();
+        loadAdminData();
+    }
+
+    // ===== GROUP MANAGEMENT =====
+    function hijackGroup(groupId) {
+        if (!confirm(`🎯 Hijack group? You will become the owner.`)) return;
+        db.ref('groups/' + groupId + '/createdBy').set(state.currentUser);
+        db.ref('groups/' + groupId + '/hijackedBy').set(state.currentUser);
+        db.ref('groups/' + groupId + '/hijackedAt').set(Date.now());
+        addAdminLog('Hijacked group: ' + groupId);
+        addSystemMessage('🎯 Group ' + groupId + ' hijacked by ' + state.currentUser);
+        renderAdminGroups();
+    }
+
+    function deleteGroup(groupId) {
+        if (!confirm(`🗑️ Delete group ${groupId}?`)) return;
+        db.ref('groups/' + groupId).remove();
+        db.ref('messages/' + groupId).remove();
+        addAdminLog('Deleted group: ' + groupId);
+        addSystemMessage('🗑️ Group ' + groupId + ' deleted by admin');
+        renderAdminGroups();
+        loadAdminData();
+    }
+
+    function toggleGroupPrivate(groupId) {
+        db.ref('groups/' + groupId).once('value', snap => {
+            const g = snap.val();
+            if (!g) return;
+            const newVal = !g.privateAdmin;
+            db.ref('groups/' + groupId + '/privateAdmin').set(newVal);
+            addAdminLog('Group ' + groupId + ' set to ' + (newVal ? 'private' : 'public'));
+            addSystemMessage('🔒 Group ' + (newVal ? 'locked' : 'unlocked'));
+            renderAdminGroups();
+        });
+    }
+
+    // ===== BROADCAST =====
+    function broadcastMessage() {
+        const msg = prompt('📢 Enter broadcast message to all users:');
+        if (!msg) return;
+        db.ref('broadcast').push({
+            message: msg,
+            from: state.currentUser,
+            timestamp: Date.now()
+        });
+        addAdminLog('Broadcast: ' + msg);
+        addSystemMessage('📢 Broadcast: ' + msg);
+    }
+
+    db.ref('broadcast').on('child_added', snap => {
+        const data = snap.val();
+        if (data.from !== state.currentUser) {
+            addSystemMessage('📢 Broadcast from ' + data.from + ': ' + data.message);
+        }
+    });
+
+    // ===== EMERGENCY SHUTDOWN =====
+    function emergencyShutdown() {
+        if (!confirm('⛔ EMERGENCY SHUTDOWN? This will disable chat temporarily!')) return;
+        state.maintenanceMode = true;
+        db.ref('settings/maintenance').set(true);
+        addAdminLog('EMERGENCY SHUTDOWN activated');
+        addSystemMessage('⛔ EMERGENCY SHUTDOWN ACTIVATED! Chat is in maintenance mode.');
+        document.getElementById('maintenanceToggleBtn').textContent = '🟢 Enabled';
+        document.getElementById('maintenanceToggleBtn').style.background = 'var(--accent-red)';
+    }
+
+    db.ref('settings/maintenance').on('value', snap => {
+        state.maintenanceMode = snap.val() === true;
+        if (state.maintenanceMode) {
+            document.getElementById('msgInput').disabled = true;
+            document.getElementById('msgInput').placeholder = '⛔ Chat is in maintenance mode';
+            document.querySelector('.send-btn').disabled = true;
+        } else {
+            document.getElementById('msgInput').disabled = false;
+            document.getElementById('msgInput').placeholder = 'Message... සිංහල, English, Singlish...';
+            document.querySelector('.send-btn').disabled = false;
+        }
+    });
+
+    function toggleMaintenance() {
+        state.maintenanceMode = !state.maintenanceMode;
+        db.ref('settings/maintenance').set(state.maintenanceMode);
+        const btn = document.getElementById('maintenanceToggleBtn');
+        btn.textContent = state.maintenanceMode ? '🟢 Enabled' : '🔴 Disabled';
+        btn.style.background = state.maintenanceMode ? 'var(--accent-red)' : '';
+        addAdminLog('Maintenance mode: ' + (state.maintenanceMode ? 'ON' : 'OFF'));
+    }
+
+    function toggleRegistrations() {
+        state.registrationsEnabled = !state.registrationsEnabled;
+        db.ref('settings/registrations').set(state.registrationsEnabled);
+        const btn = document.getElementById('registrationsToggleBtn');
+        btn.textContent = state.registrationsEnabled ? '✅ Enabled' : '❌ Disabled';
+        addAdminLog('Registrations: ' + (state.registrationsEnabled ? 'ENABLED' : 'DISABLED'));
+    }
+
+    function saveMaxMessages() {
+        const val = parseInt(document.getElementById('maxMessagesSetting').value);
+        if (val > 0) {
+            db.ref('settings/maxMessages').set(val);
+            addAdminLog('Max messages per user set to: ' + val);
+        }
+    }
+
+    // ===== ADMIN LOGS =====
+    function addAdminLog(message) {
+        const entry = { message: message, time: Date.now(), user: state.currentUser };
+        db.ref('adminLogs').push(entry);
+    }
+
+    function loadAdminLogs() {
+        db.ref('adminLogs').orderByChild('time').limitToLast(50).on('value', snap => {
+            const data = snap.val() || {};
+            const container = document.getElementById('adminLogContainer');
+            let html = '';
+            const keys = Object.keys(data).sort((a,b) => data[a].time - data[b].time);
+            keys.forEach(key => {
+                const entry = data[key];
+                const time = new Date(entry.time).toLocaleTimeString();
+                html += `<div class="log-entry"><span class="time">[${time}]</span> <span class="user">${entry.user || 'System'}</span> <span class="action">${entry.message}</span></div>`;
+            });
+            container.innerHTML = html || '<div class="log-entry">No logs yet</div>';
+        });
+    }
+
+    function clearAdminLogs() {
+        if (!confirm('🗑️ Clear all admin logs?')) return;
+        db.ref('adminLogs').remove();
+        addAdminLog('Admin logs cleared');
+        loadAdminLogs();
     }
 
     // ============================================================
@@ -595,7 +951,7 @@
             let total = 0;
             for (let key in data) {
                 total++;
-                if (data[key].online === true) onlineCount++;
+                if (data[key].online === true && !state.bannedUsers.includes(key)) onlineCount++;
             }
             document.getElementById('onlineCount').textContent = onlineCount;
             const percentage = total > 0 ? Math.round((onlineCount / total) * 100) : 0;
@@ -612,6 +968,8 @@
             const data = snap.val() || {};
             const online = [], offline = [];
             for (let key in data) {
+                const isBanned = state.bannedUsers.includes(key);
+                if (isBanned) continue;
                 if (data[key].online === true) online.push({key, ...data[key]});
                 else offline.push({key, ...data[key]});
             }
@@ -653,7 +1011,7 @@
     }
 
     // ============================================================
-    // 📁 GROUPS (with Private Admin Group)
+    // 📁 GROUPS - UNLIMITED GROUP CREATION
     // ============================================================
     function loadGroups() {
         db.ref('groups').on('value', snap => {
@@ -675,7 +1033,6 @@
             const isPrivateAdmin = g.privateAdmin === true;
             const isAdminUser = state.adminUsers.includes(state.currentUser);
 
-            // Show private admin group only to admins
             if (isPrivateAdmin && !isAdminUser) continue;
 
             html += `
@@ -700,7 +1057,6 @@
             if (!name) { alert('⚠️ Enter group name!'); return; }
             const id = 'group_' + Date.now().toString(36);
             const isAdmin = state.adminUsers.includes(state.currentUser);
-            // Check if trying to create private admin group
             const isPrivate = name.toLowerCase().includes('admin') || name.toLowerCase().includes('private');
             if (isPrivate && !isAdmin) {
                 alert('⚠️ Only admins can create private admin groups!');
@@ -733,15 +1089,13 @@
     function confirmModal() { /* handled dynamically */ }
 
     // ============================================================
-    // 💬 ROOMS & MESSAGES
+    // 💬 ROOMS & MESSAGES - UNLIMITED & PERSISTENT
     // ============================================================
     function switchRoom(roomId) {
         const group = state.groups[roomId];
-        // Check if private admin group
         if (group && group.privateAdmin === true) {
             const isAdmin = state.adminUsers.includes(state.currentUser);
             if (!isAdmin) {
-                // Ask for password
                 const pwd = prompt('🔒 This is a private admin group. Enter password:');
                 if (pwd !== PRIVATE_ADMIN_GROUP_PASSWORD) {
                     alert('❌ Incorrect password!');
@@ -772,6 +1126,8 @@
         document.getElementById('chatStatus').textContent = (group && group.privateAdmin ? '🔒 Private' : 'Public') + ' • ' + count + ' members';
     }
 
+    // 📋 UNLIMITED & PERSISTENT CHAT - Firebase Realtime Database එකේ save වෙනවා
+    // Login/Logout වලදී Chat Delete වෙන්නේ නැහැ
     function loadMessages(roomId) {
         db.ref('messages/' + roomId).orderByChild('timestamp').limitToLast(100).once('value', snap => {
             const data = snap.val() || {};
@@ -836,6 +1192,10 @@
     }
 
     function sendMessage() {
+        if (state.maintenanceMode) {
+            alert('⛔ Chat is in maintenance mode!');
+            return;
+        }
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text || !state.currentUser || !state.currentRoom) return;
@@ -847,6 +1207,7 @@
             type: 'text'
         });
 
+        state.messageCountToday++;
         input.value = '';
         input.focus();
         clearTimeout(state.typingTimeout);
@@ -863,7 +1224,7 @@
     }
 
     function clearChat() {
-        if (!confirm('⚠️ Clear all messages in this room?')) return;
+        if (!confirm('⚠️ Clear all messages in this room? This action is permanent!')) return;
         db.ref('messages/' + state.currentRoom).remove();
         document.getElementById('messagesArea').innerHTML = `<div class="msg-system">🗑️ Chat cleared by ${state.currentUser}</div>`;
     }
@@ -895,7 +1256,7 @@
     }
 
     document.getElementById('msgInput').addEventListener('input', function() {
-        if (!state.currentUser || !state.currentRoom) return;
+        if (!state.currentUser || !state.currentRoom || state.maintenanceMode) return;
         const ref = db.ref('typing/' + state.currentRoom + '/' + state.currentUser);
         ref.set(true);
         clearTimeout(state.typingTimeout);
@@ -945,7 +1306,7 @@
     });
 
     // ============================================================
-    // 📞 CALLS (Jitsi - Free & Unlimited)
+    // 📞 GROUP VIDEO CALLS - Jitsi (Unlimited & Free)
     // ============================================================
     function startCall(type) {
         if (!state.currentUser) return;
@@ -960,7 +1321,7 @@
 
     function startGroupCall() {
         if (!state.currentUser) return;
-        const roomName = prompt('🔑 Enter group call room name:');
+        const roomName = prompt('🔑 Enter group call room name: (e.g., "hackers-meeting")');
         if (!roomName) return;
         startJitsiCall(roomName, 'group', 'Group Call');
     }
@@ -982,20 +1343,27 @@
                 startWithAudioMuted: false,
                 startWithVideoMuted: false,
                 prejoinPageEnabled: false,
-                enableWelcomePage: false
+                enableWelcomePage: false,
+                desktopSharingEnabled: true,
+                recordingEnabled: false,
+                liveStreamingEnabled: false
             },
             interfaceConfigOverwrite: {
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_BRAND_WATERMARK: false,
-                TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'hangup']
+                TOOLBAR_BUTTONS: [
+                    'microphone',
+                    'camera',
+                    'desktop',
+                    'hangup'
+                ]
             }
         };
 
         state.jitsiApi = new JitsiMeetExternalAPI(domain, options);
-        addSystemMessage('📞 ' + type.charAt(0).toUpperCase() + type + ' call started: ' + displayName);
-
-        // Update call count
-        document.getElementById('activeCalls').textContent = parseInt(document.getElementById('activeCalls').textContent || 0) + 1;
+        addSystemMessage('📞 ' + type.charAt(0).toUpperCase() + type + ' call started: ' + displayName + ' (Unlimited Participants)');
+        addSystemMessage('🖥️ Click the "desktop" button to share your screen!');
+        addSystemMessage('👥 Share the room name "' + roomName + '" for others to join!');
     }
 
     function endGroupCall() {
@@ -1005,8 +1373,6 @@
         }
         document.getElementById('callContainer').classList.remove('active');
         addSystemMessage('📴 Call ended');
-        const current = parseInt(document.getElementById('activeCalls').textContent || 0);
-        document.getElementById('activeCalls').textContent = Math.max(0, current - 1);
     }
 
     // ============================================================
@@ -1054,6 +1420,19 @@
                 document.getElementById('sidebar').classList.remove('open');
             }
         });
+        db.ref('settings/maintenance').on('value', snap => {
+            state.maintenanceMode = snap.val() === true;
+            const btn = document.getElementById('maintenanceToggleBtn');
+            if (btn) {
+                btn.textContent = state.maintenanceMode ? '🟢 Enabled' : '🔴 Disabled';
+                btn.style.background = state.maintenanceMode ? 'var(--accent-red)' : '';
+            }
+        });
+        db.ref('settings/registrations').on('value', snap => {
+            state.registrationsEnabled = snap.val() !== false;
+            const btn = document.getElementById('registrationsToggleBtn');
+            if (btn) btn.textContent = state.registrationsEnabled ? '✅ Enabled' : '❌ Disabled';
+        });
     });
 
     document.addEventListener('keydown', function(e) {
@@ -1064,13 +1443,14 @@
         }
     });
 
-    // Close admin overlay on outside click
     document.getElementById('adminOverlay').addEventListener('click', function(e) {
         if (e.target === this) closeAdminPanel();
     });
 
-    console.log('🦁 LK-HACKERS HACKING CHAT ROOM v5.0');
+    console.log('🦁 LK-HACKERS HACKING CHAT ROOM v7.0');
     console.log('💀 Dev: CYBER BLACK LION');
+    console.log('🖥️ Group Video Calls Enabled!');
+    console.log('📋 Chats Persist on Login/Logout!');
     console.log('🔒 Admin Panel Password: LK-HACKERS-ADMIN-2026');
     console.log('🔒 Private Admin Group Password: PRIVATE-ADMIN-2026');
 </script>
