@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>LK-HACKERS HACKING CHAT ROOM</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Jitsi Meet SDK (Free Group Calls - Unlimited Participants) -->
+    <script src="https://meet.jit.si/external_api.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0a; --bg-secondary: #111111; --bg-card: #1a1a1a;
+            --bg-input: #222222; --border-color: #333333;
+            --accent-red: #ff0000; --accent-blue: #00d4ff; --accent-green: #00ff88;
+            --accent-yellow: #ffd700; --text-primary: #ffffff; --text-secondary: #888888;
+            --text-muted: #555555; --shadow-red: rgba(255, 0, 0, 0.25);
+            --radius: 16px; --transition: 0.3s ease;
+            --font: 'Segoe UI', 'Noto Sans Sinhala', system-ui, sans-serif;
+            --mono: 'Consolas', 'Courier New', monospace;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-red); border-radius: 10px; }
+
+        body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #hack-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background: #0a0a0a; }
+
+        .app-container { position: relative; z-index: 10; width: 98vw; max-width: 1400px; height: 96vh; max-height: 1000px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid rgba(255,0,0,0.2); box-shadow: 0 0 60px var(--shadow-red); overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Login Overlay */
+        .login-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px; }
+        .login-overlay.hidden { display: none; }
+        .login-box { background: var(--bg-card); border: 2px solid var(--accent-red); border-radius: var(--radius); padding: 40px 35px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 0 60px var(--shadow-red); animation: fadeUp 0.5s ease; }
+        .login-box img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent-red); margin-bottom: 15px; }
+        .login-box h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 6px; text-shadow: 0 0 20px var(--shadow-red); }
+        .login-box p { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px; font-family: var(--mono); }
+        .login-box input { width: 100%; padding: 14px 18px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 40px; color: var(--text-primary); font-size: 1rem; outline: none; text-align: center; font-family: var(--mono); transition: var(--transition); }
+        .login-box input:focus { border-color: var(--accent-red); box-shadow: 0 0 20px var(--shadow-red); }
+        .login-box button { width: 100%; padding: 14px; background: var(--accent-red); border: none; border-radius: 40px; color: #000; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: var(--transition); margin-top: 12px; font-family: var(--font); }
+        .login-box button:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); transform: scale(1.02); }
+        .login-box .hint { color: var(--text-muted); font-size: 0.65rem; margin-top: 15px; font-family: var(--mono); line-height: 1.6; }
+        .login-box .hint span { color: var(--accent-green); }
+
+        /* Admin Panel Overlay */
+        .admin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px; }
+        .admin-overlay.active { display: flex; }
+        .admin-box { background: var(--bg-card); border: 2px solid var(--accent-yellow); border-radius: var(--radius); padding: 30px; max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 60px rgba(255,215,0,0.2); }
+        .admin-box h3 { color: var(--accent-yellow); font-size: 1.3rem; margin-bottom: 15px; text-align: center; }
+        .admin-box .stat-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.85rem; }
+        .admin-box .stat-item .label { color: var(--text-secondary); }
+        .admin-box .stat-item .value { color: var(--accent-green); }
+        .admin-box .admin-action { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .admin-box .admin-action input { flex: 1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font); }
+        .admin-box .admin-action button { padding: 10px 20px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: var(--transition); }
+        .admin-box .admin-action button:hover { transform: scale(1.05); }
+        .admin-box .admin-list { margin-top: 15px; max-height: 150px; overflow-y: auto; }
+        .admin-box .admin-list .admin-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.8rem; }
+        .admin-box .admin-list .admin-item .remove-btn { color: var(--accent-red); cursor: pointer; background: none; border: none; font-weight: bold; }
+
+        /* Private Admin Group Lock */
+        .private-lock { color: var(--accent-yellow); font-size: 0.6rem; margin-left: 4px; }
+
+        /* Header */
+        .header { background: var(--bg-primary); padding: 10px 20px; border-bottom: 2px solid var(--accent-red); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
+        .header .brand { display: flex; align-items: center; gap: 12px; }
+        .header .brand img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent-red); object-fit: cover; }
+        .header .brand h1 { font-size: 1.1rem; color: var(--accent-red); text-shadow: 0 0 15px var(--shadow-red); }
+        .header .brand h1 span { color: var(--accent-blue); }
+        .header-stats { display: flex; align-items: center; gap: 16px; font-size: 0.7rem; font-family: var(--mono); color: var(--text-secondary); flex-wrap: wrap; }
+        .header-stats .online-count { color: var(--accent-green); display: flex; align-items: center; gap: 5px; }
+        .header-stats .online-count .dot { width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%; animation: pulse-dot 1.5s infinite; }
+        .header-stats .online-percentage { background: var(--bg-card); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--accent-blue); color: var(--accent-blue); }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .header-actions button { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 5px 12px; border-radius: 20px; font-size: 0.65rem; cursor: pointer; transition: var(--transition); font-family: var(--mono); }
+        .header-actions button:hover { border-color: var(--accent-red); color: var(--accent-red); }
+        .header-actions .admin-btn { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .header-actions .admin-btn:hover { background: var(--accent-yellow); color: #000; }
+        .header-actions .logout-btn { border-color: var(--accent-red); color: var(--accent-red); }
+        .header-actions .logout-btn:hover { background: var(--accent-red); color: #000; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+
+        /* Body Layout */
+        .body-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--bg-primary); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; transition: var(--transition); }
+        .sidebar .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .sidebar .sidebar-tabs button { flex: 1; padding: 10px 0; background: transparent; border: none; color: var(--text-secondary); font-size: 0.7rem; font-family: var(--mono); cursor: pointer; transition: var(--transition); border-bottom: 2px solid transparent; }
+        .sidebar .sidebar-tabs button.active { color: var(--accent-red); border-bottom-color: var(--accent-red); }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 10px 12px; }
+        .user-item, .group-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: var(--transition); border-left: 2px solid transparent; }
+        .user-item:hover, .group-item:hover { background: var(--bg-card); }
+        .user-item.online { border-left-color: var(--accent-green); }
+        .user-item.offline { border-left-color: var(--text-muted); opacity: 0.6; }
+        .group-item.active { border-left-color: var(--accent-red); background: var(--bg-card); }
+        .user-item .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: var(--text-secondary); flex-shrink: 0; border: 1px solid var(--border-color); }
+        .user-item .avatar.online-avatar { border-color: var(--accent-green); }
+        .user-item .user-info { flex: 1; min-width: 0; }
+        .user-item .user-info .uname { font-size: 0.8rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-item .user-info .ustatus { font-size: 0.55rem; color: var(--text-muted); }
+        .user-item .user-info .ustatus.online-status { color: var(--accent-green); }
+        .group-item .gname { font-size: 0.8rem; font-weight: 500; }
+        .group-item .gcount { font-size: 0.55rem; color: var(--text-muted); }
+        .group-item .gicon { font-size: 0.9rem; }
+        .admin-lock { color: var(--accent-yellow); font-size: 0.6rem; margin-left: 4px; }
+
+        /* Main Chat */
+        .main-chat { flex: 1; display: flex; flex-direction: column; background: var(--bg-secondary); min-width: 0; }
+        .chat-header { padding: 10px 20px; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .chat-header .chat-title h2 { font-size: 0.95rem; font-weight: 600; }
+        .chat-header .chat-title .chat-status { font-size: 0.55rem; color: var(--text-muted); }
+        .chat-header .chat-actions { display: flex; gap: 6px; }
+        .chat-header .chat-actions button { background: transparent; border: none; color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: var(--transition); }
+        .chat-header .chat-actions button:hover { background: var(--bg-card); color: var(--text-primary); }
+        .chat-header .chat-actions .call-btn { color: var(--accent-green); }
+        .chat-header .chat-actions .video-btn { color: var(--accent-blue); }
+        .chat-header .chat-actions .group-call-btn { color: var(--accent-yellow); }
+
+        .messages-area { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-secondary); }
+        .msg-group { display: flex; flex-direction: column; gap: 2px; max-width: 82%; }
+        .msg-group.sent { align-self: flex-end; }
+        .msg-group.received { align-self: flex-start; }
+        .msg-bubble { padding: 8px 14px; border-radius: 14px; font-size: 0.88rem; line-height: 1.5; word-wrap: break-word; animation: fadeUp 0.2s ease; }
+        .msg-group.sent .msg-bubble { background: var(--accent-red); color: #000; border-bottom-right-radius: 4px; }
+        .msg-group.received .msg-bubble { background: var(--bg-card); color: var(--text-primary); border-bottom-left-radius: 4px; border: 1px solid var(--border-color); }
+        .msg-group .msg-meta { display: flex; align-items: center; gap: 8px; font-size: 0.55rem; color: var(--text-muted); padding: 0 4px; margin-top: 2px; }
+        .msg-group.sent .msg-meta { justify-content: flex-end; }
+        .msg-group .msg-meta .msg-sender { font-weight: 600; color: var(--accent-blue); }
+        .msg-group .msg-meta .msg-time { color: var(--text-muted); }
+        .msg-system { align-self: center; font-size: 0.6rem; color: var(--text-muted); background: var(--bg-primary); padding: 4px 16px; border-radius: 20px; border: 1px solid var(--border-color); font-family: var(--mono); text-align: center; max-width: 90%; }
+
+        .typing-indicator { align-self: flex-start; font-size: 0.65rem; color: var(--text-muted); padding: 4px 12px; font-style: italic; animation: blink 1s infinite; }
+        .typing-indicator .typing-dot { display: inline-block; width: 6px; height: 6px; background: var(--accent-blue); border-radius: 50%; margin: 0 2px; animation: typing-dot 1.2s infinite; }
+        @keyframes typing-dot { 0%,60%,100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-6px); opacity: 1; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .input-area { padding: 10px 20px; background: var(--bg-primary); border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+        .input-area .input-wrap { flex: 1; display: flex; gap: 8px; align-items: center; background: var(--bg-input); border-radius: 30px; padding: 0 16px; border: 1px solid var(--border-color); transition: var(--transition); min-width: 0; }
+        .input-area .input-wrap:focus-within { border-color: var(--accent-red); box-shadow: 0 0 20px var(--shadow-red); }
+        .input-area .input-wrap input { flex: 1; background: transparent; border: none; color: var(--text-primary); padding: 10px 0; font-size: 0.9rem; outline: none; min-width: 0; font-family: var(--font); }
+        .input-area .input-wrap input::placeholder { color: var(--text-muted); }
+        .input-area .input-wrap .emoji-btn,
+        .input-area .input-wrap .file-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; padding: 4px; transition: var(--transition); }
+        .input-area .input-wrap .emoji-btn:hover,
+        .input-area .input-wrap .file-btn:hover { color: var(--text-primary); }
+        .input-area .send-btn { padding: 10px 24px; background: var(--accent-red); border: none; border-radius: 30px; color: #000; font-weight: bold; cursor: pointer; transition: var(--transition); font-size: 0.85rem; font-family: var(--font); flex-shrink: 0; }
+        .input-area .send-btn:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); transform: scale(1.02); }
+
+        /* Call Container (Jitsi) */
+        #callContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1500; display: none; background: #000; }
+        #callContainer.active { display: block; }
+        #callContainer .close-call { position: absolute; top: 15px; right: 20px; z-index: 1600; background: var(--accent-red); color: #000; border: none; padding: 8px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; font-family: var(--mono); font-size: 0.8rem; transition: var(--transition); }
+        #callContainer .close-call:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); }
+
+        /* Emoji Picker */
+        .emoji-picker { display: none; position: absolute; bottom: 70px; left: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; max-width: 280px; max-height: 200px; overflow-y: auto; z-index: 100; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .emoji-picker.active { display: grid; }
+        .emoji-picker span { font-size: 1.3rem; cursor: pointer; padding: 4px; text-align: center; border-radius: 6px; transition: var(--transition); }
+        .emoji-picker span:hover { background: var(--bg-input); transform: scale(1.2); }
+
+        /* Modal */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 900; display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--bg-card); border-radius: var(--radius); padding: 30px; max-width: 420px; width: 90%; border: 1px solid var(--border-color); box-shadow: 0 0 60px var(--shadow-red); animation: fadeUp 0.3s ease; }
+        .modal-box h3 { color: var(--accent-red); font-size: 1.2rem; margin-bottom: 16px; text-align: center; }
+        .modal-box input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.9rem; margin-bottom: 12px; outline: none; font-family: var(--font); }
+        .modal-box input:focus { border-color: var(--accent-red); }
+        .modal-box .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-box .modal-actions button { padding: 8px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: var(--transition); font-family: var(--font); }
+        .modal-box .modal-actions .btn-primary { background: var(--accent-red); color: #000; }
+        .modal-box .modal-actions .btn-primary:hover { background: #fff; box-shadow: 0 0 20px var(--shadow-red); }
+        .modal-box .modal-actions .btn-secondary { background: var(--bg-input); color: var(--text-secondary); }
+        .modal-box .modal-actions .btn-secondary:hover { background: var(--border-color); }
+
+        .sidebar-toggle { display: none; background: transparent; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
+        .sidebar-toggle:hover { color: var(--text-primary); }
+        .relative { position: relative; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 220px; position: absolute; left: 0; top: 0; bottom: 0; z-index: 50; transform: translateX(-100%); border-right: 1px solid var(--border-color); background: var(--bg-primary); box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex !important; }
+            .header .brand h1 { font-size: 0.9rem; }
+            .header-stats { font-size: 0.55rem; gap: 10px; }
+            .app-container { border-radius: 0; height: 100vh; max-height: none; width: 100vw; }
+            .msg-group { max-width: 92%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Canvas Background -->
+<canvas id="hack-canvas"></canvas>
+
+<!-- App Container -->
+<div class="app-container" id="app">
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <img src="https://raw.githubusercontent.com/LK-HACKERS/Photo/main/1783352823042.png" alt="LK-HACKERS">
+            <h2>🔐 LK-HACKERS</h2>
+            <p>HACKING CHAT ROOM v5.0</p>
+            <input type="text" id="loginUsername" placeholder="Enter your hacker alias..." autocomplete="off">
+            <button onclick="login()">⚡ Join the Hacking Chat</button>
+            <div class="hint">🆓 Free & Unlimited • 🔒 Encrypted<br>🌐 Sinhala | English | Singlish<br>💀 100% Anonymous</div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Overlay -->
+    <div class="admin-overlay" id="adminOverlay">
+        <div class="admin-box">
+            <h3>🛡️ ADMIN PANEL</h3>
+            <div id="adminLogin">
+                <p style="color: var(--text-secondary); font-family: var(--mono); font-size: 0.85rem; margin-bottom: 15px;">Enter Admin Password to access panel</p>
+                <input type="password" id="adminPasswordInput" placeholder="Admin Password..." style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--mono); margin-bottom: 12px;">
+                <button onclick="verifyAdminLogin()" style="width: 100%; padding: 12px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono);">🔓 Unlock Admin Panel</button>
+            </div>
+            <div id="adminContent" style="display: none;">
+                <div class="stat-item"><span class="label">Total Users</span><span class="value" id="adminTotalUsers">0</span></div>
+                <div class="stat-item"><span class="label">Online Now</span><span class="value" id="adminOnlineUsers">0</span></div>
+                <div class="stat-item"><span class="label">Total Groups</span><span class="value" id="adminTotalGroups">0</span></div>
+                <div class="stat-item"><span class="label">Admin Users</span><span class="value" id="adminAdminCount">0</span></div>
+                <div class="admin-action">
+                    <input type="text" id="adminAddUser" placeholder="Username to make admin...">
+                    <button onclick="makeAdmin()">➕ Make Admin</button>
+                </div>
+                <div class="admin-list" id="adminList">
+                    <h4 style="color: var(--text-secondary); font-size: 0.8rem; margin: 10px 0;">👑 Admin Users</h4>
+                    <div id="adminUsersList"></div>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <button onclick="closeAdminPanel()" style="padding: 8px 20px; background: var(--accent-red); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono);">✕ Close Panel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jitsi Call Container -->
+    <div id="callContainer">
+        <button class="close-call" onclick="endGroupCall()">✕ End Call</button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box" id="modalBox">
+            <h3 id="modalTitle">Create Group</h3>
+            <input type="text" id="modalInput" placeholder="Group Name..." autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" id="modalConfirmBtn" onclick="confirmModal()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="brand">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+            <img src="https://raw.githubusercontent.com/LK-HACKERS/Photo/main/1783352823042.png" alt="LK-HACKERS">
+            <h1>🦁 <span>LK</span>-HACKERS <span style="font-size: 0.55rem; background: var(--accent-yellow); color: #000; padding: 2px 10px; border-radius: 20px; font-weight: bold; margin-left: 6px;">HACKING</span></h1>
+        </div>
+        <div class="header-stats">
+            <span class="online-count"><span class="dot"></span> <span id="onlineCount">0</span> Online</span>
+            <span class="online-percentage" id="onlinePercentage">📊 0% Online</span>
+        </div>
+        <div class="header-actions">
+            <button onclick="openCreateGroup()">+ Group</button>
+            <button class="admin-btn" onclick="openAdminPanel()">🛡️ Admin</button>
+            <button class="logout-btn" onclick="logout()">⏻ Logout</button>
+        </div>
+    </div>
+
+    <!-- Body Layout -->
+    <div class="body-layout">
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-tabs">
+                <button class="active" data-tab="users" onclick="switchSidebarTab('users')">👥 Users</button>
+                <button data-tab="groups" onclick="switchSidebarTab('groups')">📁 Groups</button>
+            </div>
+            <div class="sidebar-content" id="sidebarContent">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h2 id="chatRoomName">🌐 General</h2>
+                    <span class="chat-status" id="chatStatus">Public • 0 members</span>
+                </div>
+                <div class="chat-actions">
+                    <button class="call-btn" onclick="startCall('voice')">🎙️ Call</button>
+                    <button class="video-btn" onclick="startCall('video')">📹 Video</button>
+                    <button class="group-call-btn" onclick="startGroupCall()">👥 Group Call</button>
+                    <button onclick="clearChat()" title="Clear chat">🗑️</button>
+                </div>
+            </div>
+
+            <div class="messages-area" id="messagesArea">
+                <div class="msg-system">🔥 Welcome to LK-HACKERS HACKING CHAT ROOM!<br>🆓 Free • Unlimited • Encrypted • Anonymous<br>🌐 Chat in Sinhala, English, Singlish</div>
+            </div>
+
+            <div class="typing-indicator hidden" id="typingIndicator">
+                <span id="typingUser">Someone</span> is typing
+                <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+            </div>
+
+            <div class="input-area relative">
+                <div class="input-wrap">
+                    <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
+                    <input type="text" id="msgInput" placeholder="Message... සිංහල, English, Singlish..." autocomplete="off" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}">
+                    <button class="file-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+                    <input type="file" id="fileInput" style="display:none" multiple onchange="handleFileUpload(event)">
+                </div>
+                <button class="send-btn" onclick="sendMessage()">⚡ Send</button>
+
+                <div class="emoji-picker" id="emojiPicker">
+                    <span onclick="insertEmoji('😀')">😀</span><span onclick="insertEmoji('😂')">😂</span>
+                    <span onclick="insertEmoji('🤣')">🤣</span><span onclick="insertEmoji('❤️')">❤️</span>
+                    <span onclick="insertEmoji('🔥')">🔥</span><span onclick="insertEmoji('💀')">💀</span>
+                    <span onclick="insertEmoji('👀')">👀</span><span onclick="insertEmoji('😈')">😈</span>
+                    <span onclick="insertEmoji('👾')">👾</span><span onclick="insertEmoji('🤖')">🤖</span>
+                    <span onclick="insertEmoji('💻')">💻</span><span onclick="insertEmoji('🔒')">🔒</span>
+                    <span onclick="insertEmoji('🔓')">🔓</span><span onclick="insertEmoji('⚡')">⚡</span>
+                    <span onclick="insertEmoji('🦁')">🦁</span><span onclick="insertEmoji('☠️')">☠️</span>
+                    <span onclick="insertEmoji('🏴‍☠️')">🏴‍☠️</span><span onclick="insertEmoji('🎯')">🎯</span>
+                    <span onclick="insertEmoji('🛡️')">🛡️</span><span onclick="insertEmoji('🔫')">🔫</span>
+                    <span onclick="insertEmoji('💣')">💣</span><span onclick="insertEmoji('🧨')">🧨</span>
+                    <span onclick="insertEmoji('🎭')">🎭</span><span onclick="insertEmoji('🌀')">🌀</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 🚀 JAVASCRIPT ENGINE -->
+<!-- ============================================================ -->
+<script>
+    // ============================================================
+    // 🔥 FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-vH3Dxk4oKFFSDKpaAPWVb-7tvPcmCAA",
+        authDomain: "lk-hackers-chat.firebaseapp.com",
+        databaseURL: "https://lk-hackers-chat-default-rtdb.firebaseio.com",
+        projectId: "lk-hackers-chat",
+        storageBucket: "lk-hackers-chat.firebasestorage.app",
+        messagingSenderId: "269762475378",
+        appId: "1:269762475378:web:b76e63a109e02fca93d9eb",
+        measurementId: "G-TQP3XX5G8Y"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ============================================================
+    // 🎨 MATRIX CANVAS
+    // ============================================================
+    const canvas = document.getElementById('hack-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    function resizeCanvas() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const cols = Math.floor(w / 20);
+    const drops = Array(cols).fill(1);
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%^&*()_+{}|:<>?~`';
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(10,10,10,0.05)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#0f0';
+        ctx.font = '14px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * 20, drops[i] * 18);
+            if (drops[i] * 18 > h && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+        requestAnimationFrame(drawMatrix);
+    }
+    drawMatrix();
+
+    // ============================================================
+    // 🔐 ADMIN PASSWORDS
+    // ============================================================
+    const ADMIN_PASSWORD = "LK-HACKERS-ADMIN-2026";  // Admin Panel Password
+    const PRIVATE_ADMIN_GROUP_PASSWORD = "PRIVATE-ADMIN-2026";  // Private Admin Group Password
+
+    // ============================================================
+    // 🧠 GLOBAL STATE
+    // ============================================================
+    const state = {
+        currentUser: null,
+        currentRoom: 'general',
+        isLoggedIn: false,
+        isAdmin: false,
+        jitsiApi: null,
+        selectedTab: 'users',
+        isSidebarOpen: window.innerWidth > 768,
+        isEmojiOpen: false,
+        typingTimeout: null,
+        adminUsers: []
+    };
+
+    // ============================================================
+    // 🔐 LOGIN
+    // ============================================================
+    function login() {
+        const input = document.getElementById('loginUsername');
+        const username = input.value.trim();
+        if (!username || username.length < 2) {
+            alert('⚠️ Alias must be at least 2 characters!');
+            return;
+        }
+        const clean = username.slice(0, 20);
+        state.currentUser = clean;
+        state.isLoggedIn = true;
+
+        const userRef = db.ref('users/' + clean);
+        userRef.set({
+            username: clean,
+            online: true,
+            lastSeen: Date.now(),
+            role: 'member',
+            joined: Date.now()
+        });
+        db.ref('users/' + clean + '/online').onDisconnect().set(false);
+        db.ref('users/' + clean + '/lastSeen').onDisconnect().set(Date.now());
+
+        document.getElementById('loginOverlay').classList.add('hidden');
+
+        loadUsers();
+        loadGroups();
+        loadMessages('general');
+        listenForMessages('general');
+        listenTyping();
+        updateRoomInfo('general');
+        addSystemMessage('🦁 ' + clean + ' joined the hacking chat! 🔥');
+
+        // Check if user is admin
+        checkAdminStatus(clean);
+
+        document.getElementById('msgInput').focus();
+        console.log('✅ Logged in as:', clean);
+    }
+
+    document.getElementById('loginUsername').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+
+    function logout() {
+        if (!state.currentUser) return;
+        if (!confirm('⚠️ Logout?')) return;
+        db.ref('users/' + state.currentUser + '/online').set(false);
+        db.ref('users/' + state.currentUser + '/lastSeen').set(Date.now());
+        state.isLoggedIn = false;
+        state.isAdmin = false;
+        location.reload();
+    }
+
+    // ============================================================
+    // 👑 ADMIN FUNCTIONS
+    // ============================================================
+    function checkAdminStatus(username) {
+        db.ref('admins/' + username).once('value', snap => {
+            if (snap.val() === true) {
+                state.isAdmin = true;
+                addSystemMessage('👑 Admin access granted to ' + username + '!');
+            }
+        });
+    }
+
+    function openAdminPanel() {
+        document.getElementById('adminOverlay').classList.add('active');
+        document.getElementById('adminLogin').style.display = 'block';
+        document.getElementById('adminContent').style.display = 'none';
+        document.getElementById('adminPasswordInput').value = '';
+        document.getElementById('adminPasswordInput').focus();
+        loadAdminData();
+    }
+
+    function closeAdminPanel() {
+        document.getElementById('adminOverlay').classList.remove('active');
+    }
+
+    function verifyAdminLogin() {
+        const input = document.getElementById('adminPasswordInput').value.trim();
+        if (input === ADMIN_PASSWORD) {
+            document.getElementById('adminLogin').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            loadAdminData();
+            addSystemMessage('👑 Admin panel unlocked by ' + state.currentUser);
+        } else {
+            alert('❌ Invalid Admin Password!');
+            document.getElementById('adminPasswordInput').value = '';
+        }
+    }
+
+    function loadAdminData() {
+        // Load users
+        db.ref('users').once('value', snap => {
+            const data = snap.val() || {};
+            let total = 0, online = 0;
+            for (let key in data) {
+                total++;
+                if (data[key].online === true) online++;
+            }
+            document.getElementById('adminTotalUsers').textContent = total;
+            document.getElementById('adminOnlineUsers').textContent = online;
+        });
+
+        // Load groups
+        db.ref('groups').once('value', snap => {
+            const data = snap.val() || {};
+            document.getElementById('adminTotalGroups').textContent = Object.keys(data).length;
+        });
+
+        // Load admins
+        db.ref('admins').once('value', snap => {
+            const data = snap.val() || {};
+            const admins = Object.keys(data).filter(k => data[k] === true);
+            state.adminUsers = admins;
+            document.getElementById('adminAdminCount').textContent = admins.length;
+            renderAdminList(admins);
+        });
+    }
+
+    function renderAdminList(admins) {
+        const container = document.getElementById('adminUsersList');
+        if (!admins.length) {
+            container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.8rem;">No admin users</p>';
+            return;
+        }
+        let html = '';
+        admins.forEach(admin => {
+            const isSelf = admin === state.currentUser;
+            html += `
+                <div class="admin-item">
+                    <span>${admin} ${isSelf ? '(You)' : ''}</span>
+                    ${!isSelf ? `<button class="remove-btn" onclick="removeAdmin('${admin}')">✕ Remove</button>` : '<span style="color: var(--accent-yellow);">👑</span>'}
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function makeAdmin() {
+        const username = document.getElementById('adminAddUser').value.trim();
+        if (!username) { alert('⚠️ Enter username!'); return; }
+        if (username === state.currentUser) { alert('⚠️ You are already admin!'); return; }
+
+        db.ref('users/' + username).once('value', snap => {
+            if (!snap.exists()) {
+                alert('❌ User not found!');
+                return;
+            }
+            db.ref('admins/' + username).set(true);
+            document.getElementById('adminAddUser').value = '';
+            loadAdminData();
+            addSystemMessage('👑 ' + username + ' is now an admin!');
+        });
+    }
+
+    function removeAdmin(username) {
+        if (!confirm('⚠️ Remove ' + username + ' from admins?')) return;
+        db.ref('admins/' + username).remove();
+        loadAdminData();
+        addSystemMessage('🛡️ ' + username + ' removed from admins');
+    }
+
+    // ============================================================
+    // 👥 USERS & ONLINE PERCENTAGE
+    // ============================================================
+    function loadUsers() {
+        db.ref('users').on('value', snap => {
+            const data = snap.val() || {};
+            let onlineCount = 0;
+            let total = 0;
+            for (let key in data) {
+                total++;
+                if (data[key].online === true) onlineCount++;
+            }
+            document.getElementById('onlineCount').textContent = onlineCount;
+            const percentage = total > 0 ? Math.round((onlineCount / total) * 100) : 0;
+            document.getElementById('onlinePercentage').textContent = '📊 ' + percentage + '% Online';
+            renderUsers();
+        });
+    }
+
+    function renderUsers() {
+        const container = document.getElementById('sidebarContent');
+        if (state.selectedTab !== 'users') return;
+
+        db.ref('users').once('value', snap => {
+            const data = snap.val() || {};
+            const online = [], offline = [];
+            for (let key in data) {
+                if (data[key].online === true) online.push({key, ...data[key]});
+                else offline.push({key, ...data[key]});
+            }
+            online.sort((a,b) => a.key.localeCompare(b.key));
+            offline.sort((a,b) => (b.lastSeen||0) - (a.lastSeen||0));
+
+            let html = `<div style="padding:4px 0;font-size:0.65rem;color:var(--text-muted);font-family:var(--mono);">🟢 ONLINE · ${document.getElementById('onlineCount').textContent}</div>`;
+
+            online.forEach(u => {
+                const isSelf = u.key === state.currentUser;
+                const isAdmin = state.adminUsers.includes(u.key);
+                html += `
+                    <div class="user-item online" onclick="startDM('${u.key}')">
+                        <div class="avatar online-avatar">${u.key[0].toUpperCase()}</div>
+                        <div class="user-info">
+                            <div class="uname">${u.key} ${isSelf ? '(You)' : ''} ${isAdmin ? '👑' : ''}</div>
+                            <div class="ustatus online-status">🟢 Online</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (offline.length) {
+                html += `<div style="padding:8px 0 4px 0;font-size:0.6rem;color:var(--text-muted);border-top:1px solid var(--border-color);">💤 OFFLINE</div>`;
+                offline.slice(0, 10).forEach(u => {
+                    html += `
+                        <div class="user-item offline" onclick="startDM('${u.key}')">
+                            <div class="avatar">${u.key[0].toUpperCase()}</div>
+                            <div class="user-info">
+                                <div class="uname">${u.key}</div>
+                                <div class="ustatus">Last seen: ${u.lastSeen ? new Date(u.lastSeen).toLocaleTimeString() : 'long ago'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        });
+    }
+
+    // ============================================================
+    // 📁 GROUPS (with Private Admin Group)
+    // ============================================================
+    function loadGroups() {
+        db.ref('groups').on('value', snap => {
+            state.groups = snap.val() || {};
+            renderGroups();
+        });
+    }
+
+    function renderGroups() {
+        const container = document.getElementById('sidebarContent');
+        if (state.selectedTab !== 'groups') return;
+
+        let html = `<div style="padding:4px 0;font-size:0.65rem;color:var(--text-muted);font-family:var(--mono);">📁 ${Object.keys(state.groups).length} GROUPS</div>`;
+
+        for (let key in state.groups) {
+            const g = state.groups[key];
+            const isActive = state.currentRoom === key;
+            const members = g.members ? Object.keys(g.members).length : 0;
+            const isPrivateAdmin = g.privateAdmin === true;
+            const isAdminUser = state.adminUsers.includes(state.currentUser);
+
+            // Show private admin group only to admins
+            if (isPrivateAdmin && !isAdminUser) continue;
+
+            html += `
+                <div class="group-item ${isActive ? 'active' : ''}" onclick="switchRoom('${key}')">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="gicon">${g.icon || '📁'}</span>
+                        <span class="gname">${g.name || key} ${isPrivateAdmin ? '🔒' : ''}</span>
+                    </div>
+                    <span class="gcount">${members} members</span>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    function openCreateGroup() {
+        document.getElementById('modalTitle').textContent = '🔐 Create Group';
+        document.getElementById('modalInput').placeholder = 'Group name...';
+        document.getElementById('modalConfirmBtn').textContent = 'Create';
+        document.getElementById('modalConfirmBtn').onclick = function() {
+            const name = document.getElementById('modalInput').value.trim();
+            if (!name) { alert('⚠️ Enter group name!'); return; }
+            const id = 'group_' + Date.now().toString(36);
+            const isAdmin = state.adminUsers.includes(state.currentUser);
+            // Check if trying to create private admin group
+            const isPrivate = name.toLowerCase().includes('admin') || name.toLowerCase().includes('private');
+            if (isPrivate && !isAdmin) {
+                alert('⚠️ Only admins can create private admin groups!');
+                return;
+            }
+            db.ref('groups/' + id).set({
+                name: name,
+                icon: isPrivate ? '🔒' : '💀',
+                createdBy: state.currentUser,
+                createdAt: Date.now(),
+                members: { [state.currentUser]: true },
+                privateAdmin: isPrivate && isAdmin
+            });
+            document.getElementById('modalInput').value = '';
+            closeModal();
+            switchRoom(id);
+            if (isPrivate && isAdmin) {
+                addSystemMessage('🔒 Private Admin Group created: ' + name);
+            }
+        };
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('modalInput').focus();
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.getElementById('modalInput').value = '';
+    }
+
+    function confirmModal() { /* handled dynamically */ }
+
+    // ============================================================
+    // 💬 ROOMS & MESSAGES
+    // ============================================================
+    function switchRoom(roomId) {
+        const group = state.groups[roomId];
+        // Check if private admin group
+        if (group && group.privateAdmin === true) {
+            const isAdmin = state.adminUsers.includes(state.currentUser);
+            if (!isAdmin) {
+                // Ask for password
+                const pwd = prompt('🔒 This is a private admin group. Enter password:');
+                if (pwd !== PRIVATE_ADMIN_GROUP_PASSWORD) {
+                    alert('❌ Incorrect password!');
+                    return;
+                }
+                addSystemMessage('🔓 Access granted to private admin group!');
+            }
+        }
+
+        state.currentRoom = roomId;
+        const name = group ? group.name : roomId.charAt(0).toUpperCase() + roomId.slice(1);
+        document.getElementById('chatRoomName').textContent = (group ? group.icon + ' ' : '🔒 ') + name;
+        updateRoomInfo(roomId);
+
+        document.getElementById('messagesArea').innerHTML = '';
+        loadMessages(roomId);
+        listenForMessages(roomId);
+        renderGroups();
+
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.remove('open');
+        }
+    }
+
+    function updateRoomInfo(roomId) {
+        const group = state.groups[roomId];
+        const count = group && group.members ? Object.keys(group.members).length : 0;
+        document.getElementById('chatStatus').textContent = (group && group.privateAdmin ? '🔒 Private' : 'Public') + ' • ' + count + ' members';
+    }
+
+    function loadMessages(roomId) {
+        db.ref('messages/' + roomId).orderByChild('timestamp').limitToLast(100).once('value', snap => {
+            const data = snap.val() || {};
+            const container = document.getElementById('messagesArea');
+            const sysMsgs = container.querySelectorAll('.msg-system');
+            container.innerHTML = '';
+            sysMsgs.forEach(el => container.appendChild(el));
+
+            const keys = Object.keys(data).sort((a,b) => data[a].timestamp - data[b].timestamp);
+            keys.forEach(key => {
+                const msg = data[key];
+                if (msg) renderMessage(msg, key);
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    function listenForMessages(roomId) {
+        db.ref('messages/' + roomId).orderByChild('timestamp').limitToLast(50).on('child_added', snap => {
+            const msg = snap.val();
+            if (!msg) return;
+            const container = document.getElementById('messagesArea');
+            if (container.querySelector(`[data-msg-id="${snap.key}"]`)) return;
+            renderMessage(msg, snap.key);
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    function renderMessage(msg, key) {
+        const container = document.getElementById('messagesArea');
+        const isSelf = msg.sender === state.currentUser;
+        const isSystem = msg.sender === 'system';
+
+        if (isSystem) {
+            const div = document.createElement('div');
+            div.className = 'msg-system';
+            div.textContent = msg.text;
+            div.dataset.msgId = key;
+            container.appendChild(div);
+            return;
+        }
+
+        const group = document.createElement('div');
+        group.className = 'msg-group ' + (isSelf ? 'sent' : 'received');
+        group.dataset.msgId = key;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+        bubble.textContent = msg.text || '📎 File attached';
+
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+        meta.innerHTML = `
+            <span class="msg-sender">${isSelf ? 'You' : msg.sender}</span>
+            <span class="msg-time">${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}</span>
+            <span class="msg-status ${isSelf ? 'delivered' : ''}">${isSelf ? '✓' : ''}</span>
+        `;
+
+        group.appendChild(bubble);
+        group.appendChild(meta);
+        container.appendChild(group);
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('msgInput');
+        const text = input.value.trim();
+        if (!text || !state.currentUser || !state.currentRoom) return;
+
+        db.ref('messages/' + state.currentRoom).push({
+            sender: state.currentUser,
+            text: text,
+            timestamp: Date.now(),
+            type: 'text'
+        });
+
+        input.value = '';
+        input.focus();
+        clearTimeout(state.typingTimeout);
+        db.ref('typing/' + state.currentRoom + '/' + state.currentUser).remove();
+    }
+
+    function addSystemMessage(text) {
+        const container = document.getElementById('messagesArea');
+        const div = document.createElement('div');
+        div.className = 'msg-system';
+        div.textContent = text;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function clearChat() {
+        if (!confirm('⚠️ Clear all messages in this room?')) return;
+        db.ref('messages/' + state.currentRoom).remove();
+        document.getElementById('messagesArea').innerHTML = `<div class="msg-system">🗑️ Chat cleared by ${state.currentUser}</div>`;
+    }
+
+    // ============================================================
+    // ⌨️ TYPING INDICATOR
+    // ============================================================
+    function listenTyping() {
+        db.ref('typing').on('value', snap => {
+            const data = snap.val() || {};
+            let typingUsers = [];
+            for (let room in data) {
+                if (room === state.currentRoom) {
+                    for (let user in data[room]) {
+                        if (user !== state.currentUser && data[room][user] === true) {
+                            typingUsers.push(user);
+                        }
+                    }
+                }
+            }
+            const indicator = document.getElementById('typingIndicator');
+            if (typingUsers.length > 0) {
+                document.getElementById('typingUser').textContent = typingUsers.join(', ');
+                indicator.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
+            }
+        });
+    }
+
+    document.getElementById('msgInput').addEventListener('input', function() {
+        if (!state.currentUser || !state.currentRoom) return;
+        const ref = db.ref('typing/' + state.currentRoom + '/' + state.currentUser);
+        ref.set(true);
+        clearTimeout(state.typingTimeout);
+        state.typingTimeout = setTimeout(() => ref.remove(), 1500);
+    });
+
+    // ============================================================
+    // 📎 FILE UPLOAD
+    // ============================================================
+    function handleFileUpload(event) {
+        const files = event.target.files;
+        if (!files.length) return;
+        const names = Array.from(files).map(f => f.name).join(', ');
+        db.ref('messages/' + state.currentRoom).push({
+            sender: state.currentUser,
+            text: '📎 File attached: ' + names,
+            timestamp: Date.now(),
+            type: 'file'
+        });
+        event.target.value = '';
+    }
+
+    // ============================================================
+    // 😊 EMOJI PICKER
+    // ============================================================
+    function toggleEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        state.isEmojiOpen = !state.isEmojiOpen;
+        picker.classList.toggle('active', state.isEmojiOpen);
+    }
+
+    function insertEmoji(emoji) {
+        const input = document.getElementById('msgInput');
+        input.value += emoji;
+        input.focus();
+        document.getElementById('emojiPicker').classList.remove('active');
+        state.isEmojiOpen = false;
+    }
+
+    document.addEventListener('click', function(e) {
+        const picker = document.getElementById('emojiPicker');
+        const btn = document.querySelector('.emoji-btn');
+        if (picker && btn && !picker.contains(e.target) && !btn.contains(e.target)) {
+            picker.classList.remove('active');
+            state.isEmojiOpen = false;
+        }
+    });
+
+    // ============================================================
+    // 📞 CALLS (Jitsi - Free & Unlimited)
+    // ============================================================
+    function startCall(type) {
+        if (!state.currentUser) return;
+        const target = prompt('👤 Enter username to call:');
+        if (!target || target === state.currentUser) {
+            alert('⚠️ Invalid target!');
+            return;
+        }
+        const roomName = 'call_' + [state.currentUser, target].sort().join('_') + '_' + Date.now().toString(36);
+        startJitsiCall(roomName, type, target);
+    }
+
+    function startGroupCall() {
+        if (!state.currentUser) return;
+        const roomName = prompt('🔑 Enter group call room name:');
+        if (!roomName) return;
+        startJitsiCall(roomName, 'group', 'Group Call');
+    }
+
+    function startJitsiCall(roomName, type, displayName) {
+        const container = document.getElementById('callContainer');
+        container.classList.add('active');
+
+        const domain = 'meet.jit.si';
+        const options = {
+            roomName: roomName,
+            width: '100%',
+            height: '100%',
+            parentNode: container,
+            userInfo: {
+                displayName: state.currentUser + ' (LK-HACKERS)'
+            },
+            configOverwrite: {
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                prejoinPageEnabled: false,
+                enableWelcomePage: false
+            },
+            interfaceConfigOverwrite: {
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_BRAND_WATERMARK: false,
+                TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'hangup']
+            }
+        };
+
+        state.jitsiApi = new JitsiMeetExternalAPI(domain, options);
+        addSystemMessage('📞 ' + type.charAt(0).toUpperCase() + type + ' call started: ' + displayName);
+
+        // Update call count
+        document.getElementById('activeCalls').textContent = parseInt(document.getElementById('activeCalls').textContent || 0) + 1;
+    }
+
+    function endGroupCall() {
+        if (state.jitsiApi) {
+            state.jitsiApi.dispose();
+            state.jitsiApi = null;
+        }
+        document.getElementById('callContainer').classList.remove('active');
+        addSystemMessage('📴 Call ended');
+        const current = parseInt(document.getElementById('activeCalls').textContent || 0);
+        document.getElementById('activeCalls').textContent = Math.max(0, current - 1);
+    }
+
+    // ============================================================
+    // 🎨 SIDEBAR
+    // ============================================================
+    function toggleSidebar() {
+        state.isSidebarOpen = !state.isSidebarOpen;
+        document.getElementById('sidebar').classList.toggle('open', state.isSidebarOpen);
+    }
+
+    function switchSidebarTab(tab) {
+        state.selectedTab = tab;
+        document.querySelectorAll('.sidebar-tabs button').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.sidebar-tabs button[data-tab="${tab}"]`).classList.add('active');
+        if (tab === 'users') renderUsers();
+        else renderGroups();
+    }
+
+    // ============================================================
+    // 🔗 DIRECT MESSAGE (DM)
+    // ============================================================
+    function startDM(username) {
+        if (username === state.currentUser) return;
+        const roomId = 'dm_' + [state.currentUser, username].sort().join('_');
+        db.ref('groups/' + roomId).set({
+            name: 'DM: ' + username,
+            icon: '🔒',
+            createdBy: 'system',
+            createdAt: Date.now(),
+            isDM: true,
+            members: { [state.currentUser]: true, [username]: true }
+        });
+        switchRoom(roomId);
+    }
+
+    // ============================================================
+    // 🚀 INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!state.currentUser) {
+            setTimeout(login, 300);
+        }
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+            closeAdminPanel();
+            if (state.jitsiApi) endGroupCall();
+        }
+    });
+
+    // Close admin overlay on outside click
+    document.getElementById('adminOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeAdminPanel();
+    });
+
+    console.log('🦁 LK-HACKERS HACKING CHAT ROOM v5.0');
+    console.log('💀 Dev: CYBER BLACK LION');
+    console.log('🔒 Admin Panel Password: LK-HACKERS-ADMIN-2026');
+    console.log('🔒 Private Admin Group Password: PRIVATE-ADMIN-2026');
+</script>
+</body>
+</html>
