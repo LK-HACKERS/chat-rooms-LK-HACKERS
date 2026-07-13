@@ -51,7 +51,7 @@
         /* ===== LOGIN OVERLAY ===== */
         .login-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); padding: 20px; }
         .login-overlay.hidden { display: none; }
-        .login-box { background: var(--bg-card); border: 2px solid var(--accent-red); border-radius: 16px; padding: 40px 35px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 0 60px var(--shadow-red); animation: fadeUp 0.5s ease; }
+        .login-box { background: var(--bg-card); border: 2px solid var(--accent-red); border-radius: 16px; padding: 40px 35px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 0 60px var(--shadow-red); animation: fadeUp 0.5s ease; position: relative; }
         .login-box img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent-red); margin-bottom: 15px; }
         .login-box h2 { color: var(--accent-red); font-size: 1.6rem; margin-bottom: 6px; text-shadow: 0 0 20px var(--shadow-red); }
         .login-box p { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px; font-family: var(--mono); }
@@ -59,7 +59,33 @@
         .login-box input:focus { border-color: var(--accent-red); box-shadow: 0 0 20px var(--shadow-red); }
         .login-box button { width: 100%; padding: 14px; background: var(--accent-red); border: none; border-radius: 40px; color: #000; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: var(--transition); margin-top: 12px; font-family: var(--font); }
         .login-box button:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); transform: scale(1.02); }
-        .login-box .hint { color: var(--text-muted); font-size: 0.65rem; margin-top: 15px; font-family: var(--mono); line-height: 1.6; }
+        
+        /* ===== ERROR MESSAGE ===== */
+        .error-msg {
+            color: #ff4444;
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            min-height: 24px;
+            font-family: var(--mono);
+            transition: all 0.3s;
+        }
+        .error-msg.success { color: var(--accent-green); }
+        
+        /* ===== PASSWORD HINTS ===== */
+        .login-box .hint {
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            margin-top: 15px;
+            font-family: var(--mono);
+            line-height: 1.8;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+        .login-box .hint .permanent { color: var(--accent-green); font-weight: bold; }
+        .login-box .hint .trial { color: var(--accent-yellow); font-weight: bold; }
+        .login-box .hint .admin { color: var(--accent-blue); font-weight: bold; }
+        .login-box .hint .label { color: var(--text-secondary); }
 
         /* ===== ADMIN PANEL ===== */
         .admin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.94); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: 15px; }
@@ -388,7 +414,7 @@
 <!-- App Container -->
 <div class="app-container" id="app">
 
-    <!-- Login Overlay -->
+    <!-- ===== LOGIN OVERLAY (FIXED) ===== -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
             <img src="https://raw.githubusercontent.com/LK-HACKERS/Photo/main/1783352823042.png" alt="LK-HACKERS">
@@ -396,9 +422,15 @@
             <p>HACKING CHAT ROOM v8.0</p>
             <input type="password" id="loginPassword" placeholder="Enter Login Password..." autocomplete="off">
             <button onclick="verifyLogin()">⚡ Unlock</button>
+            
+            <!-- ✅ Error Message Display (Fixed) -->
+            <div id="loginError" class="error-msg"></div>
+            
+            <!-- ✅ Password Hints (Displayed to User) -->
             <div class="hint">
-                🔒 Enter the correct password to unlock<br>
-                <span style="color: var(--text-muted); font-size: 0.5rem;">Contact admin if you forgot the password</span>
+                <span class="label">🔑 Permanent:</span> <span class="permanent">LK-HACKERS@2026</span><br>
+                <span class="label">🎯 Trial:</span> <span class="trial">GUEST-2026</span><br>
+                <span class="label">🛡️ Admin:</span> <span class="admin">CYBER-LION-2026</span>
             </div>
         </div>
     </div>
@@ -713,31 +745,38 @@
     }
 
     // ============================================================
-    // 🔐 LOGIN
+    // 🔐 LOGIN - FIXED VERSION
     // ============================================================
     function verifyLogin() {
         const input = document.getElementById('loginPassword').value.trim();
-        const errDiv = document.getElementById('loginError') || document.querySelector('.login-box .error-msg');
-        if (!errDiv) return;
+        const errDiv = document.getElementById('loginError');
+        
+        // Clear previous error
+        errDiv.textContent = '';
+        errDiv.className = 'error-msg';
 
         if (!input) {
             errDiv.textContent = '⚠️ Please enter the login password';
             return;
         }
 
+        // Check Permanent Password
         if (input === PERMANENT_PASSWORD) {
-            errDiv.textContent = '';
+            errDiv.textContent = '✅ Permanent access granted!';
+            errDiv.className = 'error-msg success';
             document.getElementById('loginOverlay').classList.add('hidden');
             const username = prompt('Enter your hacker alias:', 'LK-Hacker');
             if (username && username.trim().length >= 2) {
                 loginUser(username.trim());
             } else {
                 errDiv.textContent = '⚠️ Alias must be at least 2 characters';
+                errDiv.className = 'error-msg';
                 document.getElementById('loginOverlay').classList.remove('hidden');
             }
             return;
         }
 
+        // Check Trial Password
         if (input === TRIAL_PASSWORD) {
             const limitCheck = checkTrialLimit();
             if (!limitCheck.allowed) {
@@ -745,18 +784,21 @@
                 document.getElementById('loginPassword').value = '';
                 return;
             }
-            errDiv.textContent = '';
+            errDiv.textContent = '✅ Trial access granted! ' + limitCheck.remaining + ' min remaining';
+            errDiv.className = 'error-msg success';
             document.getElementById('loginOverlay').classList.add('hidden');
             const username = prompt('Enter your hacker alias (Trial):', 'Guest');
             if (username && username.trim().length >= 2) {
                 loginUser(username.trim(), true);
             } else {
                 errDiv.textContent = '⚠️ Alias must be at least 2 characters';
+                errDiv.className = 'error-msg';
                 document.getElementById('loginOverlay').classList.remove('hidden');
             }
             return;
         }
 
+        // Invalid Password
         errDiv.textContent = '❌ Invalid password! Use: LK-HACKERS@2026 or GUEST-2026';
         document.getElementById('loginPassword').value = '';
         document.getElementById('loginPassword').focus();
