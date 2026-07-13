@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>LK-HACKERS HACKING CHAT ROOM v8.0 - AI POWERED</title>
+    <title>LK-HACKERS HACKING CHAT ROOM v8.0</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -22,7 +22,6 @@
             --accent-pink: #ec4899; --accent-cyan: #06b6d4;
             --text-primary: #ffffff; --text-secondary: #888888;
             --text-muted: #555555; --shadow-red: rgba(255, 0, 0, 0.25);
-            --radius: 0px; --transition: 0.3s ease;
             --font: 'Segoe UI', 'Noto Sans Sinhala', system-ui, sans-serif;
             --mono: 'Consolas', 'Courier New', monospace;
         }
@@ -61,9 +60,50 @@
         .login-box button { width: 100%; padding: 14px; background: var(--accent-red); border: none; border-radius: 40px; color: #000; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: var(--transition); margin-top: 12px; font-family: var(--font); }
         .login-box button:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); transform: scale(1.02); }
         .login-box .hint { color: var(--text-muted); font-size: 0.65rem; margin-top: 15px; font-family: var(--mono); line-height: 1.6; }
-        .login-box .hint span.permanent { color: var(--accent-green); }
-        .login-box .hint span.trial { color: var(--accent-yellow); }
-        .login-box .hint span.admin { color: var(--accent-blue); }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.94); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(12px); padding: 15px; }
+        .admin-overlay.active { display: flex; }
+        .admin-box { background: var(--bg-card); border: 2px solid var(--accent-yellow); border-radius: 16px; padding: 25px 20px; max-width: 800px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 0 80px rgba(255,215,0,0.15); }
+        .admin-box h3 { color: var(--accent-yellow); font-size: 1.3rem; margin-bottom: 12px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .admin-box .admin-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .admin-box .admin-tabs button { padding: 6px 14px; background: transparent; border: 1px solid var(--border-color); border-radius: 20px; color: var(--text-secondary); font-size: 0.7rem; font-family: var(--mono); cursor: pointer; transition: var(--transition); }
+        .admin-box .admin-tabs button.active { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(255,215,0,0.05); }
+        .admin-box .admin-tabs button:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .admin-box .admin-section { display: none; }
+        .admin-box .admin-section.active { display: block; }
+        .admin-box .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .admin-box .stat-item { background: var(--bg-secondary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; }
+        .admin-box .stat-item .label { color: var(--text-secondary); font-size: 0.6rem; font-family: var(--mono); }
+        .admin-box .stat-item .value { color: var(--accent-green); font-size: 1.1rem; font-weight: bold; font-family: var(--mono); }
+        .admin-box .stat-item .value.red { color: var(--accent-red); }
+        .admin-box .stat-item .value.yellow { color: var(--accent-yellow); }
+        .admin-box .user-list, .admin-box .group-list { max-height: 200px; overflow-y: auto; margin-top: 8px; }
+        .admin-box .user-list .user-entry, .admin-box .group-list .group-entry { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--border-color); font-family: var(--mono); font-size: 0.75rem; }
+        .admin-box .user-list .user-entry .actions button, .admin-box .group-list .group-entry .actions button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.7rem; margin-left: 4px; transition: var(--transition); padding: 2px 6px; border-radius: 4px; }
+        .admin-box .user-list .user-entry .actions button:hover { background: var(--bg-card); color: var(--accent-red); }
+        .admin-box .user-list .user-entry .actions button.ban-btn { color: var(--accent-orange); }
+        .admin-box .user-list .user-entry .actions button.ban-btn:hover { background: rgba(255,107,53,0.2); }
+        .admin-box .user-list .user-entry .actions button.admin-btn { color: var(--accent-yellow); }
+        .admin-box .user-list .user-entry .actions button.admin-btn:hover { background: rgba(255,215,0,0.2); }
+        .admin-box .user-list .user-entry .status-badge { font-size: 0.5rem; padding: 2px 8px; border-radius: 10px; }
+        .admin-box .user-list .user-entry .status-badge.online { background: rgba(0,255,136,0.2); color: var(--accent-green); }
+        .admin-box .user-list .user-entry .status-badge.offline { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+        .admin-box .user-list .user-entry .status-badge.banned { background: rgba(255,0,0,0.2); color: var(--accent-red); }
+        .admin-box .admin-action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+        .admin-box .admin-action-row input, .admin-box .admin-action-row select { padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; font-family: var(--font); font-size: 0.8rem; flex: 1; min-width: 120px; }
+        .admin-box .admin-action-row button { padding: 8px 16px; background: var(--accent-yellow); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: var(--transition); font-family: var(--mono); font-size: 0.75rem; }
+        .admin-box .admin-action-row button:hover { transform: scale(1.04); }
+        .admin-box .admin-action-row button.danger { background: var(--accent-red); color: #fff; }
+        .admin-box .admin-action-row button.danger:hover { background: #ff4444; }
+        .admin-box .admin-log { max-height: 150px; overflow-y: auto; font-family: var(--mono); font-size: 0.65rem; color: var(--text-secondary); background: var(--bg-secondary); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 8px; }
+        .admin-box .admin-log .log-entry { padding: 3px 0; border-bottom: 1px solid var(--border-color); }
+        .admin-box .admin-log .log-entry .time { color: var(--text-muted); }
+        .admin-box .admin-log .log-entry .user { color: var(--accent-blue); }
+        .admin-box .admin-log .log-entry .action { color: var(--accent-yellow); }
+        .admin-box .close-admin-btn { margin-top: 15px; text-align: center; }
+        .admin-box .close-admin-btn button { padding: 8px 30px; background: var(--accent-red); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: var(--mono); font-size: 0.8rem; transition: var(--transition); }
+        .admin-box .close-admin-btn button:hover { background: #fff; box-shadow: 0 0 30px var(--shadow-red); }
 
         /* ===== HEADER ===== */
         .header { background: var(--bg-primary); padding: 8px 15px; border-bottom: 2px solid var(--accent-red); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 6px; }
@@ -357,9 +397,8 @@
             <input type="password" id="loginPassword" placeholder="Enter Login Password..." autocomplete="off">
             <button onclick="verifyLogin()">⚡ Unlock</button>
             <div class="hint">
-                🔑 Permanent: <span class="permanent">LK-HACKERS@2026</span><br>
-                🎯 Trial: <span class="trial">GUEST-2026</span><br>
-                🛡️ Admin: <span class="admin">CYBER-LION-2026</span>
+                🔒 Enter the correct password to unlock<br>
+                <span style="color: var(--text-muted); font-size: 0.5rem;">Contact admin if you forgot the password</span>
             </div>
         </div>
     </div>
@@ -575,7 +614,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 🚀 JAVASCRIPT ENGINE - v8.0 -->
+<!-- 🚀 JAVASCRIPT ENGINE -->
 <!-- ============================================================ -->
 <script>
     // ============================================================
@@ -662,7 +701,6 @@
         moodLevel: 50
     };
 
-    // Load AI Key
     if (state.aiApiKey) {
         document.getElementById('aiApiKeyInput').value = state.aiApiKey;
     }
@@ -1408,11 +1446,9 @@
             if (container.querySelector(`[data-msg-id="${snap.key}"]`)) return;
             renderMessage(msg, snap.key);
 
-            // AI Analyzer
             if (state.isAIAnalyzer && msg.sender !== state.currentUser && msg.sender !== 'system') {
                 analyzeMessage(msg);
             }
-            // Mood Matrix
             if (state.isMoodMatrix) {
                 updateMoodMatrix(msg);
             }
@@ -1434,7 +1470,6 @@
             return;
         }
 
-        // Ghost Mode - hide username
         const displayName = state.isGhost ? '🕵️ Anonymous' : (isSelf ? 'You' : msg.sender);
         const group = document.createElement('div');
         group.className = 'msg-group ' + (isSelf ? 'sent' : 'received');
@@ -1477,7 +1512,6 @@
         clearTimeout(state.typingTimeout);
         db.ref('typing/' + state.currentRoom + '/' + state.currentUser).remove();
 
-        // Update mood on sent
         if (state.isMoodMatrix) {
             state.moodLevel = Math.min(100, state.moodLevel + 2);
             updateMoodDisplay();
@@ -1550,7 +1584,6 @@
             return;
         }
 
-        // Normal message send
         sendMessage(text);
     }
 
@@ -1596,34 +1629,6 @@
             root.style.setProperty(key, t[key]);
         }
         addSystemMessage('🎨 Theme changed to: ' + theme);
-    }
-
-    // ============================================================
-    // 🎮 GAME COMMANDS
-    // ============================================================
-    let gameActive = false;
-    let gameNumber = 0;
-
-    function startGame() {
-        if (gameActive) { addSystemMessage('⚠️ Game already in progress!'); return; }
-        gameActive = true;
-        gameNumber = Math.floor(Math.random() * 100) + 1;
-        addSystemMessage('🎮 Number Guessing Game Started! Guess a number between 1-100. Type your guess.');
-    }
-
-    function checkGuess(num) {
-        if (!gameActive) { addSystemMessage('⚠️ No active game. Type /game to start.'); return; }
-        const guess = parseInt(num);
-        if (isNaN(guess)) { addSystemMessage('⚠️ Enter a valid number!'); return; }
-        if (guess < 1 || guess > 100) { addSystemMessage('⚠️ Number must be between 1-100!'); return; }
-        if (guess === gameNumber) {
-            addSystemMessage('🎉 Correct! You won! The number was ' + gameNumber + '!');
-            gameActive = false;
-        } else if (guess < gameNumber) {
-            addSystemMessage('⬆️ Too low! Try again.');
-        } else {
-            addSystemMessage('⬇️ Too high! Try again.');
-        }
     }
 
     // ============================================================
@@ -1684,13 +1689,11 @@
         const text = input.value;
         if (!state.currentUser || !state.currentRoom || state.maintenanceMode) return;
 
-        // Typing indicator
         const ref = db.ref('typing/' + state.currentRoom + '/' + state.currentUser);
         ref.set(true);
         clearTimeout(state.typingTimeout);
         state.typingTimeout = setTimeout(() => ref.remove(), 1500);
 
-        // Predictive text
         if (state.isPredictive && text.length > 2) {
             const predContainer = document.getElementById('predictiveText');
             const words = ['hello', 'world', 'hacker', 'cyber', 'security', 'linux', 'python', 'code', 'exploit', 'attack'];
@@ -1710,7 +1713,6 @@
     }
 
     function analyzeMessage(msg) {
-        // Simple sentiment analysis
         const positive = ['good', 'great', 'awesome', 'nice', 'love', 'thank', 'happy'];
         const negative = ['bad', 'hate', 'terrible', 'awful', 'sad', 'angry', 'stupid'];
         const text = msg.text.toLowerCase();
@@ -1749,7 +1751,7 @@
     }
 
     // ============================================================
-    // ⏳ TIME CAPSULE (Schedule Message)
+    // ⏳ TIME CAPSULE
     // ============================================================
     function openScheduler() {
         document.getElementById('modalTitle').textContent = '⏳ Time Capsule';
@@ -1780,7 +1782,6 @@
         document.getElementById('modalInput').focus();
     }
 
-    // Check scheduled messages every 30 seconds
     setInterval(() => {
         db.ref('scheduled/' + state.currentRoom).orderByChild('scheduledAt').once('value', snap => {
             const data = snap.val() || {};
@@ -1842,7 +1843,6 @@
                 return;
             }
             const story = messages.map((m, i) => `${i+1}. ${m.sender}: ${m.text}`).join('\n');
-            // Use AI API if available
             if (state.aiApiKey) {
                 generateStoryWithAI(story);
             } else {
@@ -1930,7 +1930,6 @@
             'ja': 'Japanese'
         };
         const langName = languages[lang] || lang;
-        // Simulated translation
         addSystemMessage(`🌐 Translated to ${langName}: ${text} (Simulated)`);
     }
 
@@ -2177,7 +2176,6 @@
     console.log('🔑 Permanent: LK-HACKERS@2026');
     console.log('🔓 Trial: GUEST-2026');
     console.log('🛡️ Admin: CYBER-LION-2026');
-    console.log('🤖 15 New AI Features Enabled!');
 </script>
 </body>
 </html>
